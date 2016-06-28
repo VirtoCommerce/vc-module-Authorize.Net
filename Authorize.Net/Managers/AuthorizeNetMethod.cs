@@ -1,13 +1,11 @@
 ﻿using AuthorizeNet;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 using VirtoCommerce.Domain.Payment.Model;
 
 namespace Authorize.Net.Managers
@@ -16,7 +14,7 @@ namespace Authorize.Net.Managers
     {
         private const string _autorizeNetApiLoginStoreSetting = "AutorizeNet.ApiLogin";
         private const string _autorizeNetTxnKeyStoreSetting = "AutorizeNet.TxnKey";
-        private const string _autorizeNetConfirmationRelativeUrlStoreSetting = "AutorizeNet.ConfirmationRelativeUrl";
+        private const string _autorizeNetConfirmationUrlStoreSetting = "AutorizeNet.ConfirmationUrl";
         private const string _authorizeNetThankYouPageRelativeUrlStoreSetting = "AutorizeNet.ThankYouPageRelativeUrl";
         private const string _autorizeNetPaymentActionTypeStoreSetting = "AutorizeNet.PaymentActionType";
         private const string _autorizeNetModeStoreSetting = "AutorizeNet.Mode";
@@ -64,11 +62,11 @@ namespace Authorize.Net.Managers
             }
         }
 
-        private string ConfirmationRelativeUrl
+        private string ConfirmationUrl
         {
             get
             {
-                return GetSetting(_autorizeNetConfirmationRelativeUrlStoreSetting);
+                return GetSetting(_autorizeNetConfirmationUrlStoreSetting);
             }
         }
 
@@ -199,16 +197,16 @@ namespace Authorize.Net.Managers
 
                 var fingerprint = HmacMD5(TxnKey, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + context.Payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
 
-                var confirmationUrl = string.Format("{0}/{1}/{2}", context.Store.Url, ConfirmationRelativeUrl, context.Order.Id);
+                var confirmationUrl = string.Format("{0}/{1}", ConfirmationUrl, context.Order.Id);
 
                 var checkoutform = string.Empty;
 
                 checkoutform += string.Format("<form action='{0}' method='POST'>", GetAuthorizeNetUrl());
 
                 //credit cart inputs for user
-                checkoutform += string.Format("<p><div style='float:left;width:250px;'><label>Credit Card Number</label><div id = 'CreditCardNumber'>{0}</div></div>", CreateInput(false, "x_card_num", "5555555555554444", 28));
-                checkoutform += string.Format("<div style='float:left;width:70px;'><label>Exp.</label><div id='CreditCardExpiration'>{0}</div></div>", CreateInput(false, "x_exp_date", "0216", 5));
-                checkoutform += string.Format("<div style='float:left;width:70px;'><label>CCV</label><div id='CCV'>{0}</div></div></p>", CreateInput(false, "x_card_code", "345", 5));
+                checkoutform += string.Format("<p><div style='float:left;width:250px;'><label>Credit Card Number</label><div id = 'CreditCardNumber'>{0}</div></div>", CreateInput(false, "x_card_num", "", 28));
+                checkoutform += string.Format("<div style='float:left;width:70px;'><label>Exp.</label><div id='CreditCardExpiration'>{0}</div></div>", CreateInput(false, "x_exp_date", "", 5));
+                checkoutform += string.Format("<div style='float:left;width:70px;'><label>CCV</label><div id='CCV'>{0}</div></div></p>", CreateInput(false, "x_card_code", "", 5));
 
                 //
                 checkoutform += CreateInput(true, "x_login", ApiLogin);

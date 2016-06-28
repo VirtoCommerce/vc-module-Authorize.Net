@@ -43,7 +43,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AuthorizeNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\AuthorizeNet.1.8.5\lib\AuthorizeNet.dll</HintPath>
+      <HintPath>..\packages\AuthorizeNet.1.8.10\lib\AuthorizeNet.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Common.Logging, Version=3.1.0.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
@@ -158,12 +158,12 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="..\packages\VirtoCommerce.Module.0.5.0\build\VirtoCommerce.Module.targets" Condition="Exists('..\packages\VirtoCommerce.Module.0.5.0\build\VirtoCommerce.Module.targets')" />
+  <Import Project="..\packages\VirtoCommerce.Module.0.6.0\build\VirtoCommerce.Module.targets" Condition="Exists('..\packages\VirtoCommerce.Module.0.6.0\build\VirtoCommerce.Module.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\VirtoCommerce.Module.0.5.0\build\VirtoCommerce.Module.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\VirtoCommerce.Module.0.5.0\build\VirtoCommerce.Module.targets'))" />
+    <Error Condition="!Exists('..\packages\VirtoCommerce.Module.0.6.0\build\VirtoCommerce.Module.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\VirtoCommerce.Module.0.6.0\build\VirtoCommerce.Module.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -19,13 +19,11 @@
     <iconUrl>Modules/$(Authorize.Net)/Content/Authorizenet_logo.png</iconUrl>
     <releaseNotes>First version.</releaseNotes>
     <copyright>Copyright © 2011-2016 Virto Commerce. All rights reserved</copyright>
-    <tags>klarna payment gateway</tags>
+    <tags>Authorize.Net payment gateway</tags>
 
     <assemblyFile>Authorize.Net.dll</assemblyFile>
     <moduleType>Authorize.Net.Module, Authorize.Net</moduleType>
-    <!--<styles>
-		<directory virtualPath="$/Content/css" searchPattern="*.css" searchSubdirectories="true" />
-	</styles>-->
+
     <settings>
         <group name="Payment methods|Authorize.Net|Credentials">
             <setting>
@@ -52,17 +50,17 @@
                 <description>Mode of Authorize.Net payment gateway (test or real)</description>
             </setting>
             <setting>
-                <name>AutorizeNet.ConfirmationRelativeUrl</name>
+                <name>AutorizeNet.ConfirmationUrl</name>
                 <valueType>string</valueType>
-                <defaultValue>admin/api/payments/an/registerpayment</defaultValue>
-                <title>Confirmation relative url</title>
-                <description>Authorize Net payment confirmation relative url</description>
+                <defaultValue>{VC manager URL}/api/payments/an/registerpayment</defaultValue>
+                <title>Confirmation URL</title>
+                <description> URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment</description>
             </setting>
             <setting>
                 <name>AuthorizeNet.ThankYouPageRelativeUrl</name>
-                <defaultValue>thanks</defaultValue>
-                <title>Thank you page relative url</title>
-                <description>Storefront thank you page relative url</description>
+                <defaultValue>cart/thanks</defaultValue>
+                <title>Thank you page relative URL</title>
+                <description>Storefront thank you page relative URL</description>
             </setting>
             <setting>
                 <name>AutorizeNet.PaymentActionType</name>
@@ -79,7 +77,7 @@
                 <name>AuthorizeNet.MD5Hash</name>
                 <valueType>string</valueType>
                 <title>MD5 hash key</title>
-                <description>Authorize Net MD5 hash key used for validate relay responce</description>
+                <description>Authorize Net MD5 hash key used for relay response validation</description>
             </setting>
         </group>
     </settings>
