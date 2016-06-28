@@ -225,7 +225,7 @@ namespace Authorize.Net.Managers
                 checkoutform += GetAuthOrCapture();
 
                 // Add a Submit button
-                checkoutform += "<div style='clear:both'></div><p><input type='submit' class='submit' value='Order with DPM!' /></p></form>";
+                checkoutform += "<div style='clear:both'></div><p><input type='submit' class='submit' value='Pay with Authorize.NET' /></p></form>";
 
                 checkoutform = checkoutform + DPMFormGenerator.EndForm();
 

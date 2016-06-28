@@ -7,8 +7,8 @@
         <dependency id="VirtoCommerce.Core" version="2.11.0" />
     </dependencies>
 
-    <title>Authorize.Net payment gateway</title>
-    <description>APIs and UI for Authorize.Net payment gateway</description>
+    <title>Authorize.Net DPM payment gateway</title>
+    <description>APIs and UI for Authorize.Net Direct Post Method (DPM) payment gateway</description>
     <authors>
         <author>Virto Commerce</author>
     </authors>
@@ -29,8 +29,8 @@
             <setting>
                 <name>AutorizeNet.ApiLogin</name>
                 <valueType>string</valueType>
-                <title>Api login id</title>
-                <description>Authorize.Net api login id from credentials</description>
+                <title>API login id</title>
+                <description>Authorize.Net API login ID from credentials</description>
             </setting>
             <setting>
                 <name>AutorizeNet.TxnKey</name>
@@ -54,7 +54,7 @@
                 <valueType>string</valueType>
                 <defaultValue>{VC manager URL}/api/payments/an/registerpayment</defaultValue>
                 <title>Confirmation URL</title>
-                <description> URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment</description>
+                <description>URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment</description>
             </setting>
             <setting>
                 <name>AuthorizeNet.ThankYouPageRelativeUrl</name>
