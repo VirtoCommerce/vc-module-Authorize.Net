@@ -12,13 +12,13 @@ namespace Authorize.Net.Managers
 {
     public class AuthorizeNetMethod : PaymentMethod
     {
-        private const string _autorizeNetApiLoginStoreSetting = "AutorizeNet.ApiLogin";
-        private const string _autorizeNetTxnKeyStoreSetting = "AutorizeNet.TxnKey";
-        private const string _autorizeNetConfirmationUrlStoreSetting = "AutorizeNet.ConfirmationUrl";
-        private const string _authorizeNetThankYouPageRelativeUrlStoreSetting = "AutorizeNet.ThankYouPageRelativeUrl";
-        private const string _autorizeNetPaymentActionTypeStoreSetting = "AutorizeNet.PaymentActionType";
-        private const string _autorizeNetModeStoreSetting = "AutorizeNet.Mode";
-        private const string _autorizeNetMD5HashStoreSetting = "AuthorizeNet.MD5Hash";
+        private const string _apiLoginStoreSetting = "AuthorizeNet.ApiLogin";
+        private const string _txnKeyStoreSetting = "AuthorizeNet.TxnKey";
+        private const string _confirmationUrlStoreSetting = "AuthorizeNet.ConfirmationUrl";
+        private const string _thankYouPageRelativeUrlStoreSetting = "AuthorizeNet.ThankYouPageRelativeUrl";
+        private const string _paymentActionTypeStoreSetting = "AuthorizeNet.PaymentActionType";
+        private const string _modeStoreSetting = "AuthorizeNet.Mode";
+        private const string _mD5HashStoreSetting = "AuthorizeNet.MD5Hash";
 
         public AuthorizeNetMethod() : base("AuthorizeNet") { }
 
@@ -26,7 +26,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_autorizeNetApiLoginStoreSetting);
+                return GetSetting(_apiLoginStoreSetting);
             }
         }
 
@@ -34,7 +34,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_autorizeNetTxnKeyStoreSetting);
+                return GetSetting(_txnKeyStoreSetting);
             }
         }
 
@@ -42,7 +42,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_autorizeNetMD5HashStoreSetting);
+                return GetSetting(_mD5HashStoreSetting);
             }
         }
 
@@ -66,7 +66,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_autorizeNetConfirmationUrlStoreSetting);
+                return GetSetting(_confirmationUrlStoreSetting);
             }
         }
 
@@ -74,7 +74,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_authorizeNetThankYouPageRelativeUrlStoreSetting);
+                return GetSetting(_thankYouPageRelativeUrlStoreSetting);
             }
         }
 
@@ -82,7 +82,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_autorizeNetPaymentActionTypeStoreSetting);
+                return GetSetting(_paymentActionTypeStoreSetting);
             }
         }
 
@@ -90,7 +90,7 @@ namespace Authorize.Net.Managers
         {
             get
             {
-                return GetSetting(_autorizeNetModeStoreSetting);
+                return GetSetting(_modeStoreSetting);
             }
         }
 
@@ -179,7 +179,7 @@ namespace Authorize.Net.Managers
                 retVal.OuterId = context.Payment.OuterId = transactionId;
                 context.Payment.AuthorizedDate = DateTime.UtcNow;
                 retVal.IsSuccess = true;
-                retVal.ReturnUrl = string.Format("{0}/{1}?id={2}", context.Store.Url, ThankYouPageRelativeUrl, context.Order.Id);
+                retVal.ReturnUrl = string.Format("{0}/{1}/{2}", context.Store.Url, ThankYouPageRelativeUrl, context.Order.Number);
             }
 
             return retVal;
@@ -205,7 +205,7 @@ namespace Authorize.Net.Managers
 
                 //credit cart inputs for user
                 checkoutform += string.Format("<p><div style='float:left;width:250px;'><label>Credit Card Number</label><div id = 'CreditCardNumber'>{0}</div></div>", CreateInput(false, "x_card_num", "", 28));
-                checkoutform += string.Format("<div style='float:left;width:70px;'><label>Exp.</label><div id='CreditCardExpiration'>{0}</div></div>", CreateInput(false, "x_exp_date", "", 5));
+                checkoutform += string.Format("<div style='float:left;width:70px;'><label>Exp.</label><div id='CreditCardExpiration'>{0}</div></div>", CreateInput(false, "x_exp_date", "", 5, "placeholder='MMYY'"));
                 checkoutform += string.Format("<div style='float:left;width:70px;'><label>CCV</label><div id='CCV'>{0}</div></div></p>", CreateInput(false, "x_card_code", "", 5));
 
                 //
@@ -261,7 +261,7 @@ namespace Authorize.Net.Managers
                 queryString.AllKeys.Contains("x_MD5_Hash"))
             {
                 var hashMD5 = GetMD5Hash(TxnKey + ApiLogin + retVal.OuterId + queryString["x_amount"]);
-                if(!string.IsNullOrEmpty(queryString["x_MD5_Hash"]) && !string.IsNullOrEmpty(hashMD5) && string.Equals(hashMD5, queryString["x_MD5_Hash"], StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(queryString["x_MD5_Hash"]) && !string.IsNullOrEmpty(hashMD5) && string.Equals(hashMD5, queryString["x_MD5_Hash"], StringComparison.OrdinalIgnoreCase))
                 {
                     retVal.IsSuccess = true;
                 }
@@ -310,16 +310,16 @@ namespace Authorize.Net.Managers
                 throw new NullReferenceException("PaymentActionType is not available");
         }
 
-        private string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0)
+        private string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
         {
             var retVal = string.Empty;
-            if(isHidden)
+            if (isHidden)
             {
                 retVal = string.Format("<input type='hidden' name='{0}' id='{0}' value='{1}' />", inputName, inputValue);
             }
             else
             {
-                retVal = string.Format("<input type='text' size='{0}' maxlength='{0}' name='{1}' id='{1}' value='{2}' />", maxLength, inputName, inputValue);
+                retVal = string.Format("<input type='text' size='{0}' maxlength='{0}' name='{1}' id='{1}' value='{2}' {3} />", maxLength, inputName, inputValue, supplementaryFields);
             }
 
             return retVal;
@@ -380,7 +380,7 @@ namespace Authorize.Net.Managers
         private string GetAuthorizeNetUrl()
         {
             var retVal = string.Empty;
-            if(Mode == "test")
+            if (Mode == "test")
             {
                 retVal = "https://test.authorize.net/gateway/transact.dll";
             }

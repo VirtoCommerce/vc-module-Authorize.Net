@@ -26,7 +26,7 @@ namespace Authorize.Net
             {
                 Name = "Authorize.Net payment gateway",
                 Description = "Authorize.Net payment gateway integration",
-                LogoUrl = "https://upload.wikimedia.org/wikipedia/en/1/17/Authorizenet_logo.png",
+                LogoUrl = "https://raw.githubusercontent.com/VirtoCommerce/vc-module-Authorize.Net/master/Authorize.Net/Content/Authorizenet_logo.png",
                 Settings = settings,
                 IsActive = false
             };

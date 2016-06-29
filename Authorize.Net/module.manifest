@@ -16,7 +16,7 @@
         <owner>Virto Commerce</owner>
     </owners>
     <projectUrl>http://virtocommerce.com/</projectUrl>
-    <iconUrl>Modules/$(Authorize.Net)/Content/Authorizenet_logo.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/VirtoCommerce/vc-module-Authorize.Net/master/Authorize.Net/Content/Authorizenet_logo.png</iconUrl>
     <releaseNotes>First version.</releaseNotes>
     <copyright>Copyright © 2011-2016 Virto Commerce. All rights reserved</copyright>
     <tags>Authorize.Net payment gateway</tags>
@@ -27,19 +27,19 @@
     <settings>
         <group name="Payment methods|Authorize.Net|Credentials">
             <setting>
-                <name>AutorizeNet.ApiLogin</name>
+                <name>AuthorizeNet.ApiLogin</name>
                 <valueType>string</valueType>
-                <title>API login id</title>
-                <description>Authorize.Net API login ID from credentials</description>
+                <title>API Login ID</title>
+                <description>API Login ID from Authorize.Net credentials</description>
             </setting>
             <setting>
-                <name>AutorizeNet.TxnKey</name>
+                <name>AuthorizeNet.TxnKey</name>
                 <valueType>string</valueType>
-                <title>Transaction key</title>
-                <description>Authorize.Net transaction key from credentials</description>
+                <title>Transaction Key</title>
+                <description>Transaction Key from Authorize.Net credentials</description>
             </setting>
             <setting>
-                <name>AutorizeNet.Mode</name>
+                <name>AuthorizeNet.Mode</name>
                 <valueType>string</valueType>
                 <defaultValue>test</defaultValue>
                 <allowedValues>
@@ -50,7 +50,7 @@
                 <description>Mode of Authorize.Net payment gateway (test or real)</description>
             </setting>
             <setting>
-                <name>AutorizeNet.ConfirmationUrl</name>
+                <name>AuthorizeNet.ConfirmationUrl</name>
                 <valueType>string</valueType>
                 <defaultValue>{VC manager URL}/api/payments/an/registerpayment</defaultValue>
                 <title>Confirmation URL</title>
@@ -63,7 +63,7 @@
                 <description>Storefront thank you page relative URL</description>
             </setting>
             <setting>
-                <name>AutorizeNet.PaymentActionType</name>
+                <name>AuthorizeNet.PaymentActionType</name>
                 <valueType>string</valueType>
                 <allowedValues>
                     <value>Authorization/Capture</value>
