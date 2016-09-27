@@ -30,7 +30,7 @@ namespace Authorize.Net.Controllers
         [AllowAnonymous]
         public IHttpActionResult RegisterPayment(string orderId)
         {
-            var order = _customerOrderService.GetById(orderId, CustomerOrderResponseGroup.Full);
+            var order = _customerOrderService.GetByIds(new[] { orderId }).FirstOrDefault();
             if (order == null)
             {
                 throw new NullReferenceException("order");
@@ -79,7 +79,7 @@ namespace Authorize.Net.Controllers
 
                 if (retVal != null && retVal.IsSuccess)
                 {
-                    _customerOrderService.Update(new CustomerOrder[] { order });
+                    _customerOrderService.SaveChanges(new CustomerOrder[] { order });
 
                     var returnHtml = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", retVal.ReturnUrl);
 
