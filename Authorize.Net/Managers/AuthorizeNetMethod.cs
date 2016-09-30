@@ -128,6 +128,7 @@ namespace Authorize.Net.Managers
                 {
                     case "1":
                         retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
+                        context.Payment.CapturedDate = DateTime.UtcNow;
                         retVal.OuterId = context.Payment.OuterId = string.Format("{0},{1}", responseFields[6], responseFields[4]);
                         retVal.IsSuccess = true;
                         context.Payment.IsApproved = true;
@@ -173,7 +174,6 @@ namespace Authorize.Net.Managers
                 else if (PaymentActionType == "Authorization/Capture")
                 {
                     retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Authorized;
-                    context.Payment.OuterId = transactionId;
                 }
 
                 retVal.OuterId = context.Payment.OuterId = transactionId;
@@ -231,7 +231,7 @@ namespace Authorize.Net.Managers
 
                 retVal.HtmlForm = checkoutform;
                 retVal.IsSuccess = true;
-                retVal.NewPaymentStatus = PaymentStatus.Pending;
+                retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Pending;
             }
 
             return retVal;
