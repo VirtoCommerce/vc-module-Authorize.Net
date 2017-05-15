@@ -34,7 +34,7 @@
             </setting>
             <setting>
                 <name>AuthorizeNet.TxnKey</name>
-                <valueType>string</valueType>
+                <valueType>securestring</valueType>
                 <title>Transaction Key</title>
                 <description>Transaction Key from Authorize.Net credentials</description>
             </setting>
@@ -75,7 +75,7 @@
             </setting>
             <setting>
                 <name>AuthorizeNet.MD5Hash</name>
-                <valueType>string</valueType>
+                <valueType>securestring</valueType>
                 <title>MD5 hash key</title>
                 <description>Authorize Net MD5 hash key used for relay response validation</description>
             </setting>
