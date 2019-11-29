@@ -18,7 +18,7 @@ namespace Authorize.Net.Managers
         private const string _thankYouPageRelativeUrlStoreSetting = "AuthorizeNet.ThankYouPageRelativeUrl";
         private const string _paymentActionTypeStoreSetting = "AuthorizeNet.PaymentActionType";
         private const string _modeStoreSetting = "AuthorizeNet.Mode";
-        private const string _mD5HashStoreSetting = "AuthorizeNet.MD5Hash";
+        private const string _sha2HashStoreSetting = "AuthorizeNet.SHA2Hash";
 
         public AuthorizeNetMethod() : base("AuthorizeNet") { }
 
@@ -38,11 +38,11 @@ namespace Authorize.Net.Managers
             }
         }
 
-        public string MD5Hash
+        public string SHA5Hash
         {
             get
             {
-                return GetSetting(_mD5HashStoreSetting);
+                return GetSetting(_sha2HashStoreSetting);
             }
         }
 
@@ -159,15 +159,17 @@ namespace Authorize.Net.Managers
             var responseReasonCode = context.Parameters["x_response_reason_code"];
             var responseReasonText = context.Parameters["x_response_reason_text"];
             var method = context.Parameters["x_method"];
-            var hash = context.Parameters["x_MD5_Hash"];
+            var hash = context.Parameters["x_SHA2_Hash"];
 
-            var hashMD5 = GetMD5Hash(MD5Hash + ApiLogin + transactionId + totalPrice);
+            var dataString = GetDataString(context.Parameters);
+            var sha2 = HMACSHA512(SHA5Hash, dataString);
 
-            if (!string.IsNullOrEmpty(hash) && !string.IsNullOrEmpty(hashMD5) && string.Equals(hashMD5, hash, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(responseCode) && responseCode.Equals("1"))
+            if (!string.IsNullOrEmpty(hash) && !string.IsNullOrEmpty(sha2) && string.Equals(sha2, hash, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(responseCode) && responseCode.Equals("1"))
             {
                 if (PaymentActionType == "Sale")
                 {
                     retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
+                    context.Payment.Status = PaymentStatus.Paid.ToString();
                     context.Payment.CapturedDate = DateTime.UtcNow;
                     context.Payment.IsApproved = true;
                 }
@@ -258,10 +260,11 @@ namespace Authorize.Net.Managers
                 queryString.AllKeys.Contains("x_response_reason_code") &&
                 queryString.AllKeys.Contains("x_response_reason_text") &&
                 queryString.AllKeys.Contains("x_method") &&
-                queryString.AllKeys.Contains("x_MD5_Hash"))
+                queryString.AllKeys.Contains("x_SHA2_Hash"))
             {
-                var hashMD5 = GetMD5Hash(TxnKey + ApiLogin + retVal.OuterId + queryString["x_amount"]);
-                if (!string.IsNullOrEmpty(queryString["x_MD5_Hash"]) && !string.IsNullOrEmpty(hashMD5) && string.Equals(hashMD5, queryString["x_MD5_Hash"], StringComparison.OrdinalIgnoreCase))
+                var dataString = GetDataString(queryString);
+                var sha2 = HMACSHA512(SHA5Hash, dataString);
+                if (!string.IsNullOrEmpty(queryString["x_SHA2_Hash"]) && !string.IsNullOrEmpty(sha2) && string.Equals(sha2, queryString["x_SHA2_Hash"], StringComparison.OrdinalIgnoreCase))
                 {
                     retVal.IsSuccess = true;
                 }
@@ -330,32 +333,6 @@ namespace Authorize.Net.Managers
             return "3.1";
         }
 
-        private string GetMD5Hash(string datastr)
-        {
-            HashAlgorithm mhash = new MD5CryptoServiceProvider();
-            string res = string.Empty;
-
-            byte[] bytValue = Encoding.UTF8.GetBytes(datastr);
-
-            byte[] bytHash = mhash.ComputeHash(bytValue);
-
-            mhash.Clear();
-
-            for (int i = 0; i < bytHash.Length; i++)
-            {
-                if (bytHash[i] < 16)
-                {
-                    res += "0" + bytHash[i].ToString("x");
-                }
-                else
-                {
-                    res += bytHash[i].ToString("x");
-                }
-            }
-
-            return res;
-        }
-
         private string HmacMD5(string key, string value)
         {
             byte[] encKey = (new ASCIIEncoding()).GetBytes(key);
@@ -375,6 +352,46 @@ namespace Authorize.Net.Managers
             }
 
             return fingerprint;
+        }
+
+        private string GetDataString(NameValueCollection queryString)
+        {
+            var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_stat", "x_zi", "x_countr", "x_phon", "x_fa", "x_emai", "x_ship_to_compan", "x_ship_to_first_nam", "x_ship_to_last_nam", "x_ship_to_addres", "x_ship_to_cit", "x_ship_to_stat", "x_ship_to_zi", "x_ship_to_countr", "x_invoice_num" };
+            var dataString = new StringBuilder();
+
+            foreach (var parameter in parameters)
+            {
+                dataString.Append($"^{queryString[parameter]}");
+            }
+
+            dataString.Append("^");
+            return dataString.ToString();
+        }
+
+        private string HMACSHA512(string key, string textToHash)
+        {
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentNullException("HMACSHA512: key", "Parameter cannot be empty.");
+            if (string.IsNullOrEmpty(textToHash))
+                throw new ArgumentNullException("HMACSHA512: textToHash", "Parameter cannot be empty.");
+            if (key.Length % 2 != 0 || key.Trim().Length < 2)
+            {
+                throw new ArgumentNullException("HMACSHA512: key", "Parameter cannot be odd or less than 2 characters.");
+            }
+            try
+            {
+                byte[] k = Enumerable.Range(0, key.Length)
+                    .Where(x => x % 2 == 0)
+                    .Select(x => Convert.ToByte(key.Substring(x, 2), 16))
+                    .ToArray();
+                HMACSHA512 hmac = new HMACSHA512(k);
+                byte[] HashedValue = hmac.ComputeHash((new System.Text.ASCIIEncoding()).GetBytes(textToHash));
+                return BitConverter.ToString(HashedValue).Replace("-", string.Empty);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("HMACSHA512: " + ex.Message);
+            }
         }
 
         private string GetAuthorizeNetUrl()
