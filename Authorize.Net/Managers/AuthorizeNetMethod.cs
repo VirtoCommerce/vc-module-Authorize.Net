@@ -356,37 +356,16 @@ namespace Authorize.Net.Managers
 
         private string GetDataString(NameValueCollection queryString)
         {
-            var result = $"^{queryString["x_trans_id"]}";
-            result += $"^{queryString["x_test_request"]}";
-            result += $"^{queryString["x_response_code"]}";
-            result += $"^{queryString["x_auth_code"]}";
-            result += $"^{queryString["x_cvv2_resp_code"]}";
-            result += $"^{queryString["x_cavv_response"]}";
-            result += $"^{queryString["x_avs_code"]}";
-            result += $"^{queryString["x_method"]}";
-            result += $"^{queryString["x_account_number"]}";
-            result += $"^{queryString["x_amount"]}";
-            result += $"^{queryString["x_company"]}";
-            result += $"^{queryString["x_first_name"]}";
-            result += $"^{queryString["x_last_name"]}";
-            result += $"^{queryString["x_address"]}";
-            result += $"^{queryString["x_city"]}";
-            result += $"^{queryString["x_stat"]}";
-            result += $"^{queryString["x_zi"]}";
-            result += $"^{queryString["x_countr"]}";
-            result += $"^{queryString["x_phon"]}";
-            result += $"^{queryString["x_fa"]}";
-            result += $"^{queryString["x_emai"]}";
-            result += $"^{queryString["x_ship_to_compan"]}";
-            result += $"^{queryString["x_ship_to_first_nam"]}";
-            result += $"^{queryString["x_ship_to_last_nam"]}";
-            result += $"^{queryString["x_ship_to_addres"]}";
-            result += $"^{queryString["x_ship_to_cit"]}";
-            result += $"^{queryString["x_ship_to_stat"]}";
-            result += $"^{queryString["x_ship_to_zi"]}";
-            result += $"^{queryString["x_ship_to_countr"]}";
-            result += $"^{queryString["x_invoice_num"]}^";
-            return result;
+            var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_stat", "x_zi", "x_countr", "x_phon", "x_fa", "x_emai", "x_ship_to_compan", "x_ship_to_first_nam", "x_ship_to_last_nam", "x_ship_to_addres", "x_ship_to_cit", "x_ship_to_stat", "x_ship_to_zi", "x_ship_to_countr", "x_invoice_num" };
+            var dataString = new StringBuilder();
+
+            foreach (var parameter in parameters)
+            {
+                dataString.Append($"^{queryString[parameter]}");
+            }
+
+            dataString.Append("^");
+            return dataString.ToString();
         }
 
         private string HMACSHA512(string key, string textToHash)
