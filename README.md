@@ -15,7 +15,7 @@ Installing the module:
 * **Transaction key** - Authorize.Net transaction key from credentials
 * **SHA2 hash key** - Authorize.Net SHA2 hash key used for relay response validation. Should be created in Authorize.Net account setting "API Credentials & Keys" 
 * **Mode** - Mode of Authorize.Net payment gateway (test or real)
-* **Confirmation URL** - URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment. **Should be copied to Authorize.Net account setting "Response/Receipt URLs"** 
+* **Confirmation URL** - URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment. **Should be added to Authorize.Net account setting "Response/Receipt URLs"** 
 * **Thank you page relative URL** - Storefront thank you page relative URL. **Store URL should be set.**
 * **Payment action type** - Action type of payment
 
