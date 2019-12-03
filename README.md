@@ -9,13 +9,14 @@ Installing the module:
 # Module management and settings UI
 ![image](https://cloud.githubusercontent.com/assets/5801549/16419453/79ea54c6-3d56-11e6-82c8-979763c62030.png)
 
+
 # Settings
 * **API login id** - Authorize.Net API login ID from credentials
 * **Transaction key** - Authorize.Net transaction key from credentials
-* **MD5 hash key** - Authorize Net MD5 hash key used for relay response validation
+* **SHA2 hash key** - Authorize.Net SHA2 hash key used for relay response validation. Should be created in Authorize.Net account setting "API Credentials & Keys" 
 * **Mode** - Mode of Authorize.Net payment gateway (test or real)
-* **Confirmation URL** - URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment
-* **Thank you page relative URL** - Storefront thank you page relative URL
+* **Confirmation URL** - URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment. **Should be added to Authorize.Net account setting "Response/Receipt URLs"** 
+* **Thank you page relative URL** - Storefront thank you page relative URL. **Store URL should be set.**
 * **Payment action type** - Action type of payment
 
 
