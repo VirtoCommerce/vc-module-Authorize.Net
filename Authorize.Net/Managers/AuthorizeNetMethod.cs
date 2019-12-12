@@ -1,11 +1,12 @@
-﻿using AuthorizeNet;
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using AuthorizeNet;
+using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
 
 namespace Authorize.Net.Managers
@@ -160,6 +161,7 @@ namespace Authorize.Net.Managers
             var responseReasonText = context.Parameters["x_response_reason_text"];
             var method = context.Parameters["x_method"];
             var hash = context.Parameters["x_SHA2_Hash"];
+            var accountNumber = context.Parameters["x_account_number"];
 
             var dataString = GetDataString(context.Parameters);
             var sha2 = HMACSHA512(SHA5Hash, dataString);
@@ -172,6 +174,17 @@ namespace Authorize.Net.Managers
                     context.Payment.Status = PaymentStatus.Paid.ToString();
                     context.Payment.CapturedDate = DateTime.UtcNow;
                     context.Payment.IsApproved = true;
+                    context.Payment.Transactions.Add(new PaymentGatewayTransaction()
+                    {
+                        Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
+                        ResponseData = $"Account Number: {accountNumber}",
+                        Status = responseReasonText,
+                        ResponseCode = responseReasonCode,
+                        CurrencyCode = context.Payment.Currency.ToString(),
+                        Amount = decimal.Parse(totalPrice, CultureInfo.InvariantCulture),
+                        IsProcessed = true,
+                        ProcessedDate = DateTime.UtcNow
+                    });
                 }
                 else if (PaymentActionType == "Authorization/Capture")
                 {
