@@ -58,7 +58,7 @@ namespace Authorize.Net.Controllers
                 var payment = order.InPayments.FirstOrDefault(x => x.GatewayCode == "AuthorizeNet" && x.Sum == Convert.ToDecimal(parameters["x_amount"], CultureInfo.InvariantCulture));
                 if (payment == null)
                 {
-                    throw new ArgumentNullException("payment");
+                    throw new NullReferenceException("appropriate paymentMethod not found");
                 }
 
                 var context = new PostProcessPaymentEvaluationContext
