@@ -33,7 +33,7 @@ namespace Authorize.Net.Controllers
             var order = _customerOrderService.GetByIds(new[] { orderId }).FirstOrDefault();
             if (order == null)
             {
-                throw new ArgumentException("Order for specified orderId not found.", "orderId");
+                throw new ArgumentNullException(orderId, "Order for specified orderId not found.");
             }
 
             var store = _storeService.GetById(order.StoreId);
@@ -58,7 +58,7 @@ namespace Authorize.Net.Controllers
                 var payment = order.InPayments.FirstOrDefault(x => x.GatewayCode == "AuthorizeNet" && x.Sum == Convert.ToDecimal(parameters["x_amount"], CultureInfo.InvariantCulture));
                 if (payment == null)
                 {
-                    throw new ArgumentException("payment");
+                    throw new ArgumentNullException("payment");
                 }
 
                 var context = new PostProcessPaymentEvaluationContext
