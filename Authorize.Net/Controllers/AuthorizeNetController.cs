@@ -12,7 +12,7 @@ using VirtoCommerce.Domain.Store.Services;
 
 namespace Authorize.Net.Controllers
 {
-    [ApiExplorerSettings(IgnoreApi=true)]
+    [ApiExplorerSettings(IgnoreApi = true)]
     [RoutePrefix("api/payments/an")]
     public class AuthorizeNetController : ApiController
     {
@@ -33,22 +33,22 @@ namespace Authorize.Net.Controllers
             var order = _customerOrderService.GetByIds(new[] { orderId }).FirstOrDefault();
             if (order == null)
             {
-                throw new NullReferenceException("order");
+                throw new ArgumentException("Order for specified orderId not found.", "orderId");
             }
 
             var store = _storeService.GetById(order.StoreId);
             var parameters = new NameValueCollection();
 
-            foreach(var key in HttpContext.Current.Request.QueryString.AllKeys)
+            foreach (var key in HttpContext.Current.Request.QueryString.AllKeys)
             {
                 parameters.Add(key, HttpContext.Current.Request.Form[key]);
             }
 
-            foreach(var key in HttpContext.Current.Request.Form.AllKeys)
+            foreach (var key in HttpContext.Current.Request.Form.AllKeys)
             {
                 parameters.Add(key, HttpContext.Current.Request.Form[key]);
             }
-            
+
             var paymentMethod = store.PaymentMethods.FirstOrDefault(x => x.Code == "AuthorizeNet");
             if (paymentMethod != null)
             {
@@ -58,12 +58,7 @@ namespace Authorize.Net.Controllers
                 var payment = order.InPayments.FirstOrDefault(x => x.GatewayCode == "AuthorizeNet" && x.Sum == Convert.ToDecimal(parameters["x_amount"], CultureInfo.InvariantCulture));
                 if (payment == null)
                 {
-                    throw new NullReferenceException("payment");
-                }
-
-                if (payment == null)
-                {
-                    throw new NullReferenceException("appropriate paymentMethod not found");
+                    throw new ArgumentException("payment");
                 }
 
                 var context = new PostProcessPaymentEvaluationContext

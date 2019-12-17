@@ -1,11 +1,12 @@
-﻿using AuthorizeNet;
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using AuthorizeNet;
+using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
 
 namespace Authorize.Net.Managers
@@ -98,50 +99,52 @@ namespace Authorize.Net.Managers
         {
             var retVal = new CaptureProcessPaymentResult();
 
-            var webClient = new WebClient();
-            var form = new NameValueCollection();
-            form.Add("x_login", ApiLogin);
-            form.Add("x_tran_key", TxnKey);
-
-            form.Add("x_delim_data", "TRUE");
-            form.Add("x_delim_char", "|");
-            form.Add("x_encap_char", "");
-            form.Add("x_version", GetApiVersion());
-            form.Add("x_method", "CC");
-            form.Add("x_currency_code", context.Payment.Currency.ToString());
-            form.Add("x_type", "CAPTURE_ONLY");
-
-            var orderTotal = Math.Round(context.Payment.Sum, 2);
-            form.Add("x_amount", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
-
-            //x_trans_id. When x_test_request (sandbox) is set to a positive response, 
-            //or when Test mode is enabled on the payment gateway, this value will be "0".
-            form.Add("x_trans_id", context.Payment.OuterId);
-
-            var responseData = webClient.UploadValues(GetAuthorizeNetUrl(), form);
-            var reply = Encoding.ASCII.GetString(responseData);
-
-            if (!string.IsNullOrEmpty(reply))
+            using (var webClient = new WebClient())
             {
-                string[] responseFields = reply.Split('|');
-                switch (responseFields[0])
+                var form = new NameValueCollection();
+                form.Add("x_login", ApiLogin);
+                form.Add("x_tran_key", TxnKey);
+
+                form.Add("x_delim_data", "TRUE");
+                form.Add("x_delim_char", "|");
+                form.Add("x_encap_char", "");
+                form.Add("x_version", ApiVersion);
+                form.Add("x_method", "CC");
+                form.Add("x_currency_code", context.Payment.Currency.ToString());
+                form.Add("x_type", "CAPTURE_ONLY");
+
+                var orderTotal = Math.Round(context.Payment.Sum, 2);
+                form.Add("x_amount", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
+
+                //x_trans_id. When x_test_request (sandbox) is set to a positive response, 
+                //or when Test mode is enabled on the payment gateway, this value will be "0".
+                form.Add("x_trans_id", context.Payment.OuterId);
+
+                var responseData = webClient.UploadValues(GetAuthorizeNetUrl(), form);
+                var reply = Encoding.ASCII.GetString(responseData);
+
+                if (!string.IsNullOrEmpty(reply))
                 {
-                    case "1":
-                        retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
-                        context.Payment.CapturedDate = DateTime.UtcNow;
-                        retVal.OuterId = context.Payment.OuterId = string.Format("{0},{1}", responseFields[6], responseFields[4]);
-                        retVal.IsSuccess = true;
-                        context.Payment.IsApproved = true;
-                        break;
-                    case "2":
-                        throw new NullReferenceException(string.Format("Declined ({0}: {1})", responseFields[2], responseFields[3]));
-                    case "3":
-                        throw new NullReferenceException(string.Format("Error: {0}", reply));
+                    string[] responseFields = reply.Split('|');
+                    switch (responseFields[0])
+                    {
+                        case "1":
+                            retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
+                            context.Payment.CapturedDate = DateTime.UtcNow;
+                            retVal.OuterId = context.Payment.OuterId = string.Format("{0},{1}", responseFields[6], responseFields[4]);
+                            retVal.IsSuccess = true;
+                            context.Payment.IsApproved = true;
+                            break;
+                        case "2":
+                            throw new InvalidOperationException(string.Format("Declined ({0}: {1})", responseFields[2], responseFields[3]));
+                        case "3":
+                            throw new InvalidOperationException(string.Format("Error: {0}", reply));
+                    }
                 }
-            }
-            else
-            {
-                throw new NullReferenceException("Authorize.NET unknown error");
+                else
+                {
+                    throw new InvalidOperationException("Authorize.NET unknown error");
+                }
             }
 
             return retVal;
@@ -153,13 +156,14 @@ namespace Authorize.Net.Managers
 
             var transactionId = context.Parameters["x_split_tender_id"] ?? context.Parameters["x_trans_id"];
             var invoiceNumber = context.Parameters["x_invoice_num"];
-            var authorizationCode = context.Parameters["x_auth_code"];
+            //"x_auth_code" parameter was retrieved earlier, but not used
             var totalPrice = context.Parameters["x_amount"];
             var responseCode = context.Parameters["x_response_code"];
             var responseReasonCode = context.Parameters["x_response_reason_code"];
             var responseReasonText = context.Parameters["x_response_reason_text"];
-            var method = context.Parameters["x_method"];
+            // "x_method" parameter was retrieved earlier, but not used
             var hash = context.Parameters["x_SHA2_Hash"];
+            var accountNumber = context.Parameters["x_account_number"];
 
             var dataString = GetDataString(context.Parameters);
             var sha2 = HMACSHA512(SHA5Hash, dataString);
@@ -172,6 +176,17 @@ namespace Authorize.Net.Managers
                     context.Payment.Status = PaymentStatus.Paid.ToString();
                     context.Payment.CapturedDate = DateTime.UtcNow;
                     context.Payment.IsApproved = true;
+                    context.Payment.Transactions.Add(new PaymentGatewayTransaction()
+                    {
+                        Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
+                        ResponseData = $"Account Number: {accountNumber}",
+                        Status = responseReasonText,
+                        ResponseCode = responseReasonCode,
+                        CurrencyCode = context.Payment.Currency.ToString(),
+                        Amount = decimal.Parse(totalPrice, CultureInfo.InvariantCulture),
+                        IsProcessed = true,
+                        ProcessedDate = DateTime.UtcNow
+                    });
                 }
                 else if (PaymentActionType == "Authorization/Capture")
                 {
@@ -298,7 +313,7 @@ namespace Authorize.Net.Managers
             }
             else
             {
-                throw new NullReferenceException("Only authorized payments can be voided");
+                throw new InvalidOperationException("Only authorized payments can be voided");
             }
             return retVal;
         }
@@ -310,7 +325,7 @@ namespace Authorize.Net.Managers
             else if (PaymentActionType == "Authorization/Capture")
                 return CreateInput(true, "x_type", "AUTH_ONLY");
             else
-                throw new NullReferenceException("PaymentActionType is not available");
+                throw new InvalidOperationException($@"PaymentActionType {PaymentActionType} is not available");
         }
 
         private string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
@@ -328,30 +343,27 @@ namespace Authorize.Net.Managers
             return retVal;
         }
 
-        private string GetApiVersion()
-        {
-            return "3.1";
-        }
+        private const string ApiVersion = "3.1";
 
         private string HmacMD5(string key, string value)
         {
-            byte[] encKey = (new ASCIIEncoding()).GetBytes(key);
-            byte[] encData = (new ASCIIEncoding()).GetBytes(value);
+            var encKey = (new ASCIIEncoding()).GetBytes(key);
+            var encData = (new ASCIIEncoding()).GetBytes(value);
 
             // create a HMACMD5 object with the key set
-            HMACMD5 myhmacMD5 = new HMACMD5(encKey);
+            var myhmacMD5 = new HMACMD5(encKey);
 
             // calculate the hash (returns a byte array)
-            byte[] hash = myhmacMD5.ComputeHash(encData);
+            var hash = myhmacMD5.ComputeHash(encData);
 
             // loop through the byte array and add append each piece to a string to obtain a hash string
-            string fingerprint = string.Empty;
+            var fingerprint = new StringBuilder();
             for (int i = 0; i < hash.Length; i++)
             {
-                fingerprint += hash[i].ToString("x").PadLeft(2, '0');
+                fingerprint.Append(hash[i].ToString("x").PadLeft(2, '0'));
             }
 
-            return fingerprint;
+            return fingerprint.ToString();
         }
 
         private string GetDataString(NameValueCollection queryString)
@@ -371,12 +383,12 @@ namespace Authorize.Net.Managers
         private string HMACSHA512(string key, string textToHash)
         {
             if (string.IsNullOrEmpty(key))
-                throw new ArgumentNullException("HMACSHA512: key", "Parameter cannot be empty.");
+                throw new ArgumentNullException("key", "HMACSHA512: Parameter key cannot be empty.");
             if (string.IsNullOrEmpty(textToHash))
-                throw new ArgumentNullException("HMACSHA512: textToHash", "Parameter cannot be empty.");
+                throw new ArgumentNullException("textToHash", "HMACSHA512: Parameter textToHash cannot be empty.");
             if (key.Length % 2 != 0 || key.Trim().Length < 2)
             {
-                throw new ArgumentNullException("HMACSHA512: key", "Parameter cannot be odd or less than 2 characters.");
+                throw new ArgumentException("HMACSHA512: Parameter key cannot be odd or less than 2 characters.", "key");
             }
             try
             {
@@ -390,7 +402,7 @@ namespace Authorize.Net.Managers
             }
             catch (Exception ex)
             {
-                throw new Exception("HMACSHA512: " + ex.Message);
+                throw new ArgumentException("HMACSHA512: " + ex.Message);
             }
         }
 
