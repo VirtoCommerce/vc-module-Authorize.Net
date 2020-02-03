@@ -1,0 +1,18 @@
+{
+  "payment": {
+    "labels": {
+      "AuthorizeNetMethod": {
+        "name": "Authorize.Net payment gateway",
+        "description": "Authorize.Net payment gateway integration"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.AuthorizeNet": {
+      "ApiLogin": {
+        "description": "API Login ID",
+        "title": "API Login ID from Authorize.Net credentials"
+      }
+    }
+  }
+}
