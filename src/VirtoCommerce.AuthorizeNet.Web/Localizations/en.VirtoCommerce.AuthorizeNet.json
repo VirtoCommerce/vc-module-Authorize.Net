@@ -1,18 +1,42 @@
 {
-  "payment": {
-    "labels": {
-      "AuthorizeNetMethod": {
-        "name": "Authorize.Net payment gateway",
-        "description": "Authorize.Net payment gateway integration"
-      }
+    "payment": {
+        "labels": {
+            "AuthorizeNetMethod": {
+                "name": "Authorize.Net payment gateway",
+                "description": "Authorize.Net payment gateway integration"
+            }
+        }
+    },
+    "settings": {
+        "VirtoCommerce.Payment.AuthorizeNet": {
+            "ApiLogin": {
+                "title": "API Login ID",
+                "description": "API Login ID from Authorize.Net credentials"
+            },
+            "TxnKey": {
+                "title": "Transaction Key",
+                "description": "Transaction Key from Authorize.Net credentials"
+            },
+            "SHA2Hash": {
+                "title": "SHA2 hash key",
+                "description": "Authorize Net SHA2 hash key used for relay response validation"
+            },
+            "Mode": {
+                "title": "Mode",
+                "description": "Mode of Authorize.Net payment gateway (test or real)"
+            },
+            "ConfirmationUrl": {
+                "title": "Confirmation URL",
+                "description": "URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment"
+            },
+            "ThankYouPageRelativeUrl": {
+                "title": "Thank you page relative URL",
+                "description": "Storefront thank you page relative URL"
+            },
+            "PaymentActionType": {
+                "title": "Payment action type",
+                "description": "Action type of payment"
+            }
+        }
     }
-  },
-  "settings": {
-    "VirtoCommerce.Payment.AuthorizeNet": {
-      "ApiLogin": {
-        "description": "API Login ID",
-        "title": "API Login ID from Authorize.Net credentials"
-      }
-    }
-  }
 }
