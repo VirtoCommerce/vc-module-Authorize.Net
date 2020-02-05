@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using VirtoCommerce.AuthorizeNet.Web.Managers;
@@ -24,27 +22,10 @@ namespace VirtoCommerce.AuthorizeNet.Web
         {
             var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
             settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
-            settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.AuthorizeNet.Settings, nameof(AuthorizeNetMethod));
-
-            var settingsManager = appBuilder.ApplicationServices.GetRequiredService<ISettingsManager>();
-
-            Func<AuthorizeNetMethod> authorizeNetPaymentMethodFactory = () =>
-            {
-                var result = new AuthorizeNetMethod
-                {
-                    LogoUrl = "https://raw.githubusercontent.com/VirtoCommerce/vc-module-Authorize.Net/master/Authorize.Net/Content/Authorizenet_logo.png",
-                    IsActive = false,
-                };
-                var settingNames = ModuleConstants.Settings.AuthorizeNet.Settings.Select(x => x.Name);
-                var settings = settingsManager.GetObjectSettingsAsync(settingNames, result.TypeName, result.Id).GetAwaiter().GetResult().ToList();
-
-                result.Settings = settings;
-
-                return result;
-            };
 
             var paymentMethodsRegistrar = appBuilder.ApplicationServices.GetRequiredService<IPaymentMethodsRegistrar>();
-            paymentMethodsRegistrar.RegisterPaymentMethod(authorizeNetPaymentMethodFactory);
+            paymentMethodsRegistrar.RegisterPaymentMethod<AuthorizeNetMethod>();
+            settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.AuthorizeNet.Settings, nameof(AuthorizeNetMethod));
         }
 
         public void Uninstall()
