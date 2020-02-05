@@ -29,9 +29,9 @@
                 "title": "Confirmation URL",
                 "description": "URL for payment confirmation in VC Manager API. {VC manager URL}/api/payments/an/registerpayment"
             },
-            "ThankYouPageRelativeUrl": {
-                "title": "Thank you page relative URL",
-                "description": "Storefront thank you page relative URL"
+            "ThankYouPageUrl": {
+                "title": "Thank you page URL",
+                "description": "Storefront thank you page absolute URL without protocol, e.g. //storefront/cart/thanks"
             },
             "PaymentActionType": {
                 "title": "Payment action type",

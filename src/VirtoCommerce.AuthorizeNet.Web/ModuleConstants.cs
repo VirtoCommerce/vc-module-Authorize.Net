@@ -47,12 +47,12 @@ namespace VirtoCommerce.AuthorizeNet.Web
                     DefaultValue = "{VC manager URL}/api/payments/an/registerpayment"
                 };
 
-                public static readonly SettingDescriptor ThankYouPageRelativeUrl = new SettingDescriptor
+                public static readonly SettingDescriptor ThankYouPageUrl = new SettingDescriptor
                 {
-                    Name = "VirtoCommerce.Payment.AuthorizeNet.ThankYouPageRelativeUrl",
+                    Name = "VirtoCommerce.Payment.AuthorizeNet.ThankYouPageUrl",
                     GroupName = "Payment|Authorize.Net",
                     ValueType = SettingValueType.ShortText,
-                    DefaultValue = "cart/thanks",
+                    DefaultValue = "//{VC manager URL}/cart/thanks",
                 };
 
                 public static readonly SettingDescriptor PaymentActionType = new SettingDescriptor
@@ -75,7 +75,7 @@ namespace VirtoCommerce.AuthorizeNet.Web
                             SHA2Hash,
                             Mode,
                             ConfirmationUrl,
-                            ThankYouPageRelativeUrl,
+                            ThankYouPageUrl,
                             PaymentActionType,
                         };
                     }

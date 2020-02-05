@@ -69,11 +69,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             }
         }
 
-        private string ThankYouPageRelativeUrl
+        private string ThankYouPageUrl
         {
             get
             {
-                return Settings.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ThankYouPageRelativeUrl.Name, string.Empty);
+                return Settings.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ThankYouPageUrl.Name, string.Empty);
             }
         }
 
@@ -155,7 +155,10 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
             var order = request.Order as CustomerOrder ?? throw new InvalidOperationException($"\"{nameof(request.Order)}\" should not be null and of \"{nameof(CustomerOrder)}\" type.");
+#pragma warning disable S1481 // Unused local variables should be removed
+            // Need to check shop existence, though not using it
             var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
+#pragma warning restore S1481 // Unused local variables should be removed
 
             var transactionId = request.Parameters["x_split_tender_id"] ?? request.Parameters["x_trans_id"];
             var invoiceNumber = request.Parameters["x_invoice_num"];
@@ -199,7 +202,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 result.OuterId = payment.OuterId = transactionId;
                 payment.AuthorizedDate = DateTime.UtcNow;
                 result.IsSuccess = true;
-                result.ReturnUrl = string.Format("{0}/{1}/{2}", store.Url, ThankYouPageRelativeUrl, order.Number);
+                result.ReturnUrl = string.Format("{0}/{1}", ThankYouPageUrl, order.Number);
             }
 
             return result;
