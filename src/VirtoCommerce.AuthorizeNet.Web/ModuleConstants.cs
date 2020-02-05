@@ -52,7 +52,7 @@ namespace VirtoCommerce.AuthorizeNet.Web
                     Name = "VirtoCommerce.Payment.AuthorizeNet.ThankYouPageUrl",
                     GroupName = "Payment|Authorize.Net",
                     ValueType = SettingValueType.ShortText,
-                    DefaultValue = "//{VC manager URL}/cart/thanks",
+                    DefaultValue = "//{VC storefront URL}/cart/thanks",
                 };
 
                 public static readonly SettingDescriptor PaymentActionType = new SettingDescriptor
