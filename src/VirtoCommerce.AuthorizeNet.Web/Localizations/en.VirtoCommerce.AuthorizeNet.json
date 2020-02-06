@@ -31,7 +31,7 @@
             },
             "ThankYouPageUrl": {
                 "title": "Thank you page URL",
-                "description": "Storefront thank you page absolute URL without protocol, e.g. //storefront/cart/thanks"
+                "description": "Storefront thank you page URL, e.g. {storefront URL}/cart/thanks"
             },
             "PaymentActionType": {
                 "title": "Payment action type",

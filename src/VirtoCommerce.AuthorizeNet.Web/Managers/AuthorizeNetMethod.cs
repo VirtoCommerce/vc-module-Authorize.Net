@@ -202,7 +202,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 result.OuterId = payment.OuterId = transactionId;
                 payment.AuthorizedDate = DateTime.UtcNow;
                 result.IsSuccess = true;
-                result.ReturnUrl = string.Format("{0}/{1}", ThankYouPageUrl, order.Number);
+                result.ReturnUrl = string.Format("{0}/{1}", RemoveSchemeFromUrl(ThankYouPageUrl), order.Number);
             }
 
             return result;
@@ -431,6 +431,16 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             }
 
             return retVal;
+        }
+
+        private static string RemoveSchemeFromUrl(string url)
+        {
+            var i = url.IndexOf("://");
+            if (i > 0)
+            {
+                url = url.Substring(i + 1);
+            }
+            return url;
         }
     }
 }
