@@ -6,6 +6,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using AuthorizeNet;
+using Microsoft.Extensions.Options;
 using VirtoCommerce.OrdersModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Model.Requests;
@@ -17,8 +18,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 {
     public class AuthorizeNetMethod : PaymentMethod
     {
-        public AuthorizeNetMethod() : base(nameof(AuthorizeNetMethod))
+        private readonly AuthorizeNetSecureOptions _options;
+
+        public AuthorizeNetMethod(IOptions<AuthorizeNetSecureOptions> options) : base(nameof(AuthorizeNetMethod))
         {
+            _options = options.Value;
         }
 
         public override PaymentMethodGroupType PaymentMethodGroupType
@@ -41,7 +45,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ApiLogin.Name, string.Empty);
+                return _options.ApiLogin;
             }
         }
 
@@ -49,7 +53,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.TxnKey.Name, string.Empty);
+                return _options.TxnKey;
             }
         }
 
@@ -57,7 +61,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.SHA2Hash.Name, string.Empty);
+                return _options.SHA2Hash;
             }
         }
 

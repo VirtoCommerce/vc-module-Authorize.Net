@@ -9,26 +9,7 @@ namespace VirtoCommerce.AuthorizeNet.Web
         {
             public static class AuthorizeNet
             {
-                public static readonly SettingDescriptor ApiLogin = new SettingDescriptor
-                {
-                    Name = "VirtoCommerce.Payment.AuthorizeNet.ApiLogin",
-                    GroupName = "Payment|Authorize.Net",
-                    ValueType = SettingValueType.ShortText,
-                };
 
-                public static readonly SettingDescriptor TxnKey = new SettingDescriptor
-                {
-                    Name = "VirtoCommerce.Payment.AuthorizeNet.TxnKey",
-                    GroupName = "Payment|Authorize.Net",
-                    ValueType = SettingValueType.SecureString,
-                };
-
-                public static readonly SettingDescriptor SHA2Hash = new SettingDescriptor
-                {
-                    Name = "VirtoCommerce.Payment.AuthorizeNet.SHA2Hash",
-                    GroupName = "Payment|Authorize.Net",
-                    ValueType = SettingValueType.SecureString,
-                };
 
                 public static readonly SettingDescriptor Mode = new SettingDescriptor
                 {
@@ -70,9 +51,6 @@ namespace VirtoCommerce.AuthorizeNet.Web
                     {
                         return new List<SettingDescriptor>
                         {
-                            ApiLogin,
-                            TxnKey,
-                            SHA2Hash,
                             Mode,
                             ConfirmationUrl,
                             ThankYouPageUrl,

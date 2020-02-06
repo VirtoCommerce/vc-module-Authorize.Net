@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using VirtoCommerce.AuthorizeNet.Web.Managers;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.Platform.Core.Modularity;
@@ -15,7 +17,10 @@ namespace VirtoCommerce.AuthorizeNet.Web
 
         public void Initialize(IServiceCollection serviceCollection)
         {
-            // No need in actions
+            var snapshot = serviceCollection.BuildServiceProvider();
+            var configuration = snapshot.GetService<IConfiguration>();
+
+            serviceCollection.AddOptions<AuthorizeNetSecureOptions>().Bind(configuration.GetSection("Payments:AuthorizeNet")).ValidateDataAnnotations();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
@@ -23,8 +28,9 @@ namespace VirtoCommerce.AuthorizeNet.Web
             var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
             settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
 
+            var authorizeNetOptions = appBuilder.ApplicationServices.GetRequiredService<IOptions<AuthorizeNetSecureOptions>>();
             var paymentMethodsRegistrar = appBuilder.ApplicationServices.GetRequiredService<IPaymentMethodsRegistrar>();
-            paymentMethodsRegistrar.RegisterPaymentMethod<AuthorizeNetMethod>();
+            paymentMethodsRegistrar.RegisterPaymentMethod(() => new AuthorizeNetMethod(authorizeNetOptions));
             settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.AuthorizeNet.Settings, nameof(AuthorizeNetMethod));
         }
 
