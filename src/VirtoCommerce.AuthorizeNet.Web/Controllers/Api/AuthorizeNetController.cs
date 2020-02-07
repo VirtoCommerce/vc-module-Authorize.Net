@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VirtoCommerce.AuthorizeNet.Web.Managers;
 using VirtoCommerce.OrdersModule.Core.Model;
@@ -33,16 +34,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Controllers.Api
 
         [HttpPost]
         [Route("registerpayment/{orderId}")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [AllowAnonymous]
         public async Task<ActionResult> RegisterPayment(string orderId)
         {
-            var order = (await _customerOrderService.GetByIdsAsync(new[] { orderId })).FirstOrDefault();
-            if (order == null)
-            {
-                throw new ArgumentException("Order for specified orderId not found.", "orderId");
-            }
-
-            var store = await _storeService.GetByIdAsync(order.StoreId);
             var parameters = new NameValueCollection();
 
             foreach (var key in HttpContext.Request.Query.Keys)
@@ -54,6 +50,14 @@ namespace VirtoCommerce.AuthorizeNet.Web.Controllers.Api
             {
                 parameters.Add(key, HttpContext.Request.Form[key]);
             }
+
+            var order = (await _customerOrderService.GetByIdsAsync(new[] { orderId })).FirstOrDefault();
+            if (order == null)
+            {
+                throw new ArgumentException("Order for specified orderId not found.", "orderId");
+            }
+
+            var store = await _storeService.GetByIdAsync(order.StoreId);
 
             var paymentMethodsSearchCriteria = AbstractTypeFactory<PaymentMethodsSearchCriteria>.TryCreateInstance();
             paymentMethodsSearchCriteria.StoreId = store.Id;
