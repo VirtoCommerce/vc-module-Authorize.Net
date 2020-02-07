@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.AuthorizeNet.Web.Managers;
+using VirtoCommerce.AuthorizeNet.Web.Services;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Settings;
@@ -21,6 +22,7 @@ namespace VirtoCommerce.AuthorizeNet.Web
             var configuration = snapshot.GetService<IConfiguration>();
 
             serviceCollection.AddOptions<AuthorizeNetSecureOptions>().Bind(configuration.GetSection("Payments:AuthorizeNet")).ValidateDataAnnotations();
+            serviceCollection.AddTransient<IAuthorizeNetRegisterPaymentService, AuthorizeNetRegisterPaymentService>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
