@@ -1,5 +1,5 @@
 # Authorize.Net DPM payment gateway integration module
-Authorize.Net Direct Post Method (DPM) payment gateway module provides integration with Authorize.Net DPM trough <a href="http://developer.authorize.net/api" target="_blank">Payment Form (SIM)</a> API.
+Authorize.Net Direct Post Method (DPM) payment gateway module provides integration with Authorize.Net DPM through <a href="http://developer.authorize.net/api" target="_blank">Payment Form (SIM)</a> API.
 
 # Installation
 Installing the module:
@@ -11,10 +11,10 @@ Installing the module:
 
 # Settings
 The module can be configured in the following places:
-- Platfrom config file: appsettings.json
+- Platform config file: appsettings.json
 - Store-specific settings: Stores -> (your store) -> Payment methods -> Authorize.Net payment gateway -> Settings
 
-Confidential account settings AccountNumber and LicenseKey provided by Avalara during registration process should be configured in appsetting.json:
+Confidential Authorize.Net account settings should be configured in appsetting.json:
 * **API login id** - Authorize.Net API login ID from credentials
 * **Transaction key** - Authorize.Net transaction key from credentials
 * **SHA2 hash key** - Authorize.Net SHA2 hash key used for relay response validation. Should be created in Authorize.Net account setting "API Credentials & Keys".
