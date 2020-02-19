@@ -8,6 +8,7 @@ using System.Text;
 using AuthorizeNet;
 using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
+using VirtoCommerce.Platform.Core.Common;
 
 namespace Authorize.Net.Managers
 {
@@ -231,6 +232,7 @@ namespace Authorize.Net.Managers
                 checkoutform += CreateInput(true, "x_po_num", context.Order.Number);
                 checkoutform += CreateInput(true, "x_relay_response", "TRUE");
                 checkoutform += CreateInput(true, "x_relay_url", confirmationUrl);
+                //checkoutform += CreateInput(true, "x_receipt_link_url", ThankYouPageRelativeUrl);
 
                 ///Fingerprint and params for it
                 checkoutform += CreateInput(true, "x_fp_sequence", sequence);
@@ -238,6 +240,7 @@ namespace Authorize.Net.Managers
                 checkoutform += CreateInput(true, "x_fp_hash", fingerprint);
                 checkoutform += CreateInput(true, "x_currency_code", currency);
                 checkoutform += CreateInput(true, "x_amount", context.Payment.Sum.ToString("F", CultureInfo.InvariantCulture));
+
 
                 checkoutform += GetAuthOrCapture();
 
@@ -256,7 +259,13 @@ namespace Authorize.Net.Managers
 
         public override RefundProcessPaymentResult RefundProcessPayment(RefundProcessPaymentEvaluationContext context)
         {
-            throw new NotImplementedException();
+            var refundStatus = new RefundProcessPaymentResult { IsSuccess = true, ErrorMessage = "" };
+            if (context.Payment.IsApproved && context.Payment.PaymentStatus == PaymentStatus.Paid)
+            {
+                context.Payment.PaymentStatus = refundStatus.NewPaymentStatus = PaymentStatus.Refunded;
+                context.Payment.Status = PaymentStatus.Refunded.ToString();
+            }
+            return refundStatus;
         }
 
         public override ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
