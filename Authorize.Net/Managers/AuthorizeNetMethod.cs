@@ -264,6 +264,7 @@ namespace Authorize.Net.Managers
             {
                 context.Payment.PaymentStatus = refundStatus.NewPaymentStatus = PaymentStatus.Refunded;
                 context.Payment.Status = PaymentStatus.Refunded.ToString();
+                context.Payment.VoidedDate = DateTime.UtcNow;
             }
             return refundStatus;
         }
@@ -313,6 +314,7 @@ namespace Authorize.Net.Managers
                     context.Payment.IsCancelled = true;
                     retVal.IsSuccess = true;
                     retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Voided;
+                    context.Payment.Status = PaymentStatus.Voided.ToString();
                     context.Payment.VoidedDate = context.Payment.CancelledDate = DateTime.UtcNow;
                 }
                 else
