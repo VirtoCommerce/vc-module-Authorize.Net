@@ -168,35 +168,57 @@ namespace Authorize.Net.Managers
             var dataString = GetDataString(context.Parameters);
             var sha2 = HMACSHA512(SHA5Hash, dataString);
 
-            if (!string.IsNullOrEmpty(hash) && !string.IsNullOrEmpty(sha2) && string.Equals(sha2, hash, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(responseCode) && responseCode.Equals("1"))
+            if (!string.IsNullOrEmpty(hash) && !string.IsNullOrEmpty(sha2) && string.Equals(sha2, hash, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(responseCode))
             {
-                if (PaymentActionType == "Sale")
+                switch (responseCode)
                 {
-                    retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
-                    context.Payment.Status = PaymentStatus.Paid.ToString();
-                    context.Payment.CapturedDate = DateTime.UtcNow;
-                    context.Payment.IsApproved = true;
-                    context.Payment.Transactions.Add(new PaymentGatewayTransaction()
-                    {
-                        Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
-                        ResponseData = $"Account Number: {accountNumber}",
-                        Status = responseReasonText,
-                        ResponseCode = responseReasonCode,
-                        CurrencyCode = context.Payment.Currency.ToString(),
-                        Amount = decimal.Parse(totalPrice, CultureInfo.InvariantCulture),
-                        IsProcessed = true,
-                        ProcessedDate = DateTime.UtcNow
-                    });
-                }
-                else if (PaymentActionType == "Authorization/Capture")
-                {
-                    retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Authorized;
+                    case "1":
+                        if (PaymentActionType == "Sale")
+                        {
+                            retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
+                            context.Payment.Status = PaymentStatus.Paid.ToString();
+                            context.Payment.CapturedDate = DateTime.UtcNow;
+                            context.Payment.IsApproved = true;
+                            context.Payment.Transactions.Add(new PaymentGatewayTransaction()
+                            {
+                                Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
+                                ResponseData = $"Account Number: {accountNumber}",
+                                Status = responseReasonText,
+                                ResponseCode = responseReasonCode,
+                                CurrencyCode = context.Payment.Currency.ToString(),
+                                Amount = decimal.Parse(totalPrice, CultureInfo.InvariantCulture),
+                                IsProcessed = true,
+                                ProcessedDate = DateTime.UtcNow
+                            });
+                        }
+                        else if (PaymentActionType == "Authorization/Capture")
+                        {
+                            retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Authorized;
+                        }
+
+                        retVal.OuterId = context.Payment.OuterId = transactionId;
+                        context.Payment.AuthorizedDate = DateTime.UtcNow;
+                        retVal.IsSuccess = true;
+                        retVal.ReturnUrl = string.Format("{0}/{1}/{2}", context.Store.Url, ThankYouPageRelativeUrl, context.Order.Number);
+                        break;
+                    case "2":
+                        context.Payment.Status = "Declined";
+                        var pmtResult2 = new ProcessPaymentResult();
+                        pmtResult2.Error = string.Format("your transaction was declined - {0} ({1}).", responseReasonText.Replace(".", ""), responseReasonCode);
+                        context.Payment.ProcessPaymentResult = pmtResult2;
+                        context.Payment.Comment = pmtResult2.Error; 
+                        break;
+                    default:
+                        context.Payment.Status = "Error";
+                        var pmtResult3 = new ProcessPaymentResult();
+                        pmtResult3.Error = string.Format("There was an error processing your transaction - {0} ({1})", responseReasonText.Replace(".", ""), responseReasonCode);
+                        context.Payment.ProcessPaymentResult = pmtResult3;
+                        context.Payment.Comment = pmtResult3.Error;
+                        break;
                 }
 
-                retVal.OuterId = context.Payment.OuterId = transactionId;
-                context.Payment.AuthorizedDate = DateTime.UtcNow;
-                retVal.IsSuccess = true;
-                retVal.ReturnUrl = string.Format("{0}/{1}/{2}", context.Store.Url, ThankYouPageRelativeUrl, context.Order.Number);
+                retVal.IsSuccess = false;
+                retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
             }
 
             return retVal;
