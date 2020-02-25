@@ -72,8 +72,13 @@ namespace Authorize.Net.Controllers
 
                 var retVal = paymentMethod.PostProcessPayment(context);
 
-                if (retVal != null && retVal.IsSuccess)
+                if (retVal != null)
                 {
+                    if (retVal.IsSuccess)
+                    {
+                        order.Status = "Processing";
+                    }
+
                     _customerOrderService.SaveChanges(new CustomerOrder[] { order });
 
                     var returnHtml = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", retVal.ReturnUrl);
