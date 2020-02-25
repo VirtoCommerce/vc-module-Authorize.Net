@@ -206,7 +206,9 @@ namespace Authorize.Net.Managers
                         var pmtResult2 = new ProcessPaymentResult();
                         pmtResult2.Error = string.Format("your transaction was declined - {0} ({1}).", responseReasonText.Replace(".", ""), responseReasonCode);
                         context.Payment.ProcessPaymentResult = pmtResult2;
-                        context.Payment.Comment = pmtResult2.Error; 
+                        context.Payment.Comment = pmtResult2.Error;
+                        retVal.IsSuccess = false;
+                        retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
                         break;
                     default:
                         context.Payment.Status = "Error";
@@ -214,11 +216,12 @@ namespace Authorize.Net.Managers
                         pmtResult3.Error = string.Format("There was an error processing your transaction - {0} ({1})", responseReasonText.Replace(".", ""), responseReasonCode);
                         context.Payment.ProcessPaymentResult = pmtResult3;
                         context.Payment.Comment = pmtResult3.Error;
+                        retVal.IsSuccess = false;
+                        retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
                         break;
                 }
 
-                retVal.IsSuccess = false;
-                retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
+                
             }
 
             return retVal;
