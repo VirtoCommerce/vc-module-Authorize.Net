@@ -8,6 +8,7 @@ using System.Text;
 using AuthorizeNet;
 using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
+using VirtoCommerce.Platform.Core.Common;
 
 namespace Authorize.Net.Managers
 {
@@ -263,6 +264,7 @@ namespace Authorize.Net.Managers
                 checkoutform += CreateInput(true, "x_fp_hash", fingerprint);
                 checkoutform += CreateInput(true, "x_currency_code", currency);
                 checkoutform += CreateInput(true, "x_amount", context.Payment.Sum.ToString("F", CultureInfo.InvariantCulture));
+                checkoutform += CreateInput(true, "x_customer_ip", GetIPAddress());
 
                 checkoutform += GetAuthOrCapture();
 
@@ -281,7 +283,14 @@ namespace Authorize.Net.Managers
 
         public override RefundProcessPaymentResult RefundProcessPayment(RefundProcessPaymentEvaluationContext context)
         {
-            throw new NotImplementedException();
+            var refundStatus = new RefundProcessPaymentResult { IsSuccess = true, ErrorMessage = "" };
+            if (context.Payment.IsApproved && context.Payment.PaymentStatus == PaymentStatus.Paid)
+            {
+                context.Payment.PaymentStatus = refundStatus.NewPaymentStatus = PaymentStatus.Refunded;
+                context.Payment.Status = PaymentStatus.Refunded.ToString();
+                context.Payment.VoidedDate = DateTime.UtcNow;
+            }
+            return refundStatus;
         }
 
         public override ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
@@ -329,6 +338,7 @@ namespace Authorize.Net.Managers
                     context.Payment.IsCancelled = true;
                     retVal.IsSuccess = true;
                     retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Voided;
+                    context.Payment.Status = PaymentStatus.Voided.ToString();
                     context.Payment.VoidedDate = context.Payment.CancelledDate = DateTime.UtcNow;
                 }
                 else
@@ -444,6 +454,23 @@ namespace Authorize.Net.Managers
             }
 
             return retVal;
+        }
+
+        private string GetIPAddress()
+        {
+            System.Web.HttpContext context = System.Web.HttpContext.Current;
+            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+            if (!string.IsNullOrEmpty(ipAddress))
+            {
+                string[] addresses = ipAddress.Split(',');
+                if (addresses.Length != 0)
+                {
+                    return addresses[0];
+                }
+            }
+
+            return context.Request.ServerVariables["REMOTE_ADDR"];
         }
     }
 }
