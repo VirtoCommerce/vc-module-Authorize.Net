@@ -1,14 +1,13 @@
-﻿using System;
+﻿using AuthorizeNet;
+using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using AuthorizeNet;
 using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
-using VirtoCommerce.Platform.Core.Common;
 
 namespace Authorize.Net.Managers
 {
@@ -222,7 +221,7 @@ namespace Authorize.Net.Managers
                         break;
                 }
 
-                
+
             }
 
             return retVal;
@@ -234,6 +233,9 @@ namespace Authorize.Net.Managers
 
             if (context.Order != null && context.Store != null && context.Payment != null)
             {
+
+                var userIp = context.Parameters["True-Client-IP"];
+
                 var sequence = new Random().Next(0, 1000).ToString();
                 var timeStamp = ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString();
                 var currency = context.Payment.Currency.ToString();
@@ -264,7 +266,7 @@ namespace Authorize.Net.Managers
                 checkoutform += CreateInput(true, "x_fp_hash", fingerprint);
                 checkoutform += CreateInput(true, "x_currency_code", currency);
                 checkoutform += CreateInput(true, "x_amount", context.Payment.Sum.ToString("F", CultureInfo.InvariantCulture));
-                checkoutform += CreateInput(true, "x_customer_ip", GetIPAddress());
+                checkoutform += CreateInput(true, "x_customer_ip", userIp);
 
                 checkoutform += GetAuthOrCapture();
 
@@ -454,23 +456,6 @@ namespace Authorize.Net.Managers
             }
 
             return retVal;
-        }
-
-        private string GetIPAddress()
-        {
-            System.Web.HttpContext context = System.Web.HttpContext.Current;
-            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-
-            if (!string.IsNullOrEmpty(ipAddress))
-            {
-                string[] addresses = ipAddress.Split(',');
-                if (addresses.Length != 0)
-                {
-                    return addresses[0];
-                }
-            }
-
-            return context.Request.ServerVariables["REMOTE_ADDR"];
         }
     }
 }
