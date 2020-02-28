@@ -1,14 +1,13 @@
-﻿using System;
+﻿using AuthorizeNet;
+using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using AuthorizeNet;
 using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
-using VirtoCommerce.Platform.Core.Common;
 
 namespace Authorize.Net.Managers
 {
@@ -132,14 +131,14 @@ namespace Authorize.Net.Managers
                         case "1":
                             retVal.NewPaymentStatus = context.Payment.PaymentStatus = PaymentStatus.Paid;
                             context.Payment.CapturedDate = DateTime.UtcNow;
-                            retVal.OuterId = context.Payment.OuterId = string.Format("{0},{1}", responseFields[6], responseFields[4]);
+                            retVal.OuterId = context.Payment.OuterId = $"{responseFields[6]},{responseFields[4]}";
                             retVal.IsSuccess = true;
                             context.Payment.IsApproved = true;
                             break;
                         case "2":
-                            throw new InvalidOperationException(string.Format("Declined ({0}: {1})", responseFields[2], responseFields[3]));
+                            throw new InvalidOperationException($"{PaymentStatus.Declined} ({responseFields[2]}: {responseFields[3]})");
                         case "3":
-                            throw new InvalidOperationException(string.Format("Error: {0}", reply));
+                            throw new InvalidOperationException($"{PaymentStatus.Error}: {reply}");
                     }
                 }
                 else
@@ -203,7 +202,7 @@ namespace Authorize.Net.Managers
                         retVal.ReturnUrl = string.Format("{0}/{1}/{2}", context.Store.Url, ThankYouPageRelativeUrl, context.Order.Number);
                         break;
                     case "2":
-                        context.Payment.Status = "Declined";
+                        context.Payment.Status = PaymentStatus.Declined.ToString();
                         var pmtResult2 = new ProcessPaymentResult();
                         pmtResult2.Error = string.Format("your transaction was declined - {0} ({1}).", responseReasonText.Replace(".", ""), responseReasonCode);
                         context.Payment.ProcessPaymentResult = pmtResult2;
@@ -212,7 +211,7 @@ namespace Authorize.Net.Managers
                         retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
                         break;
                     default:
-                        context.Payment.Status = "Error";
+                        context.Payment.Status = PaymentStatus.Error.ToString();
                         var pmtResult3 = new ProcessPaymentResult();
                         pmtResult3.Error = string.Format("There was an error processing your transaction - {0} ({1})", responseReasonText.Replace(".", ""), responseReasonCode);
                         context.Payment.ProcessPaymentResult = pmtResult3;
@@ -221,8 +220,6 @@ namespace Authorize.Net.Managers
                         retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
                         break;
                 }
-
-                
             }
 
             return retVal;
@@ -245,6 +242,22 @@ namespace Authorize.Net.Managers
                 var checkoutform = string.Empty;
 
                 checkoutform += string.Format("<form action='{0}' method='POST'>", GetAuthorizeNetUrl());
+
+                if (context.Payment.Status != null && (context.Payment.Status == PaymentStatus.Declined.ToString() || context.Payment.Status == PaymentStatus.Error.ToString()))
+                {
+                    var tranResponse = "An unknown error occurred.  Please contact customer service.";
+                    if (context.Payment.Status == PaymentStatus.Declined.ToString())
+                    {
+                        tranResponse = "Your transaction was declined.";
+                    }
+
+                    else if (context.Payment.Status == PaymentStatus.Error.ToString())
+                    {
+                        tranResponse = context.Payment.Comment ?? "Cannot get error.";
+                    }
+
+                    checkoutform += string.Format("<p><div style='width:350px;' class='note form-error'>{0} Please try again.</div></p><div style='clear:both'></div>", tranResponse);
+                }
 
                 //credit cart inputs for user
                 checkoutform += string.Format("<p><div style='float:left;width:250px;'><label>Credit Card Number</label><div id = 'CreditCardNumber'>{0}</div></div>", CreateInput(false, "x_card_num", "", 28));
