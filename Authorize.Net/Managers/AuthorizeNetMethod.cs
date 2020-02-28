@@ -266,7 +266,11 @@ namespace Authorize.Net.Managers
                 checkoutform += CreateInput(true, "x_fp_hash", fingerprint);
                 checkoutform += CreateInput(true, "x_currency_code", currency);
                 checkoutform += CreateInput(true, "x_amount", context.Payment.Sum.ToString("F", CultureInfo.InvariantCulture));
-                checkoutform += CreateInput(true, "x_customer_ip", userIp);
+
+                if (!string.IsNullOrEmpty(userIp))
+                {
+                    checkoutform += CreateInput(true, "x_customer_ip", userIp);
+                }
 
                 checkoutform += GetAuthOrCapture();
 
