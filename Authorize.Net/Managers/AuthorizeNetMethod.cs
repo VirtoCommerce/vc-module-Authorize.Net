@@ -180,7 +180,7 @@ namespace Authorize.Net.Managers
                             context.Payment.Status = PaymentStatus.Paid.ToString();
                             context.Payment.CapturedDate = DateTime.UtcNow;
                             context.Payment.IsApproved = true;
-                            context.Payment.Comment += $"{DateTime.Now}: Paid successfully. Transaction Info {transactionId}, Invoice Number: {invoiceNumber}{Environment.NewLine}";
+                            context.Payment.Comment = $"Paid successfully. Transaction Info {transactionId}, Invoice Number: {invoiceNumber}{Environment.NewLine}";
                             context.Payment.Transactions.Add(new PaymentGatewayTransaction()
                             {
                                 Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
@@ -208,7 +208,7 @@ namespace Authorize.Net.Managers
                         var pmtResult2 = new ProcessPaymentResult();
                         pmtResult2.Error = $"your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
                         context.Payment.ProcessPaymentResult = pmtResult2;
-                        context.Payment.Comment += $"{DateTime.Now}:{pmtResult2.Error}{Environment.NewLine}";
+                        context.Payment.Comment = $"{pmtResult2.Error}{Environment.NewLine}";
                         retVal.IsSuccess = false;
                         retVal.ReturnUrl = $"{context.Store.Url}/cart/checkout/paymentform?orderNumber={context.Order.Number}";
                         break;
@@ -217,7 +217,7 @@ namespace Authorize.Net.Managers
                         var pmtResult3 = new ProcessPaymentResult();
                         pmtResult3.Error = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
                         context.Payment.ProcessPaymentResult = pmtResult3;
-                        context.Payment.Comment += $"{DateTime.Now}:{pmtResult3.Error}{Environment.NewLine}";
+                        context.Payment.Comment = $"{pmtResult3.Error}{Environment.NewLine}";
                         retVal.IsSuccess = false;
                         retVal.ReturnUrl = $"{context.Store.Url}/cart/checkout/paymentform?orderNumber={context.Order.Number}";
                         break;
