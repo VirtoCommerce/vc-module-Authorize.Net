@@ -5,7 +5,6 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Description;
-using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Order.Services;
 using VirtoCommerce.Domain.Payment.Model;
 using VirtoCommerce.Domain.Store.Services;
@@ -70,18 +69,13 @@ namespace Authorize.Net.Controllers
                     Parameters = parameters
                 };
 
-                var retVal = paymentMethod.PostProcessPayment(context);
+                var result = paymentMethod.PostProcessPayment(context);
 
-                if (retVal != null)
+                if (result != null)
                 {
-                    if (retVal.IsSuccess)
-                    {
-                        order.Status = "Processing";
-                    }
+                    _customerOrderService.SaveChanges(new[] { order });
 
-                    _customerOrderService.SaveChanges(new CustomerOrder[] { order });
-
-                    var returnHtml = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", retVal.ReturnUrl);
+                    var returnHtml = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", result.ReturnUrl);
 
                     return Ok(returnHtml);
                 }
