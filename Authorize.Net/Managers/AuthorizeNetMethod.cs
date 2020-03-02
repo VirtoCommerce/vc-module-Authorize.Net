@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using VirtoCommerce.Domain.Order.Model;
 using VirtoCommerce.Domain.Payment.Model;
+using Environment = System.Environment;
 
 namespace Authorize.Net.Managers
 {
@@ -179,13 +180,14 @@ namespace Authorize.Net.Managers
                             context.Payment.Status = PaymentStatus.Paid.ToString();
                             context.Payment.CapturedDate = DateTime.UtcNow;
                             context.Payment.IsApproved = true;
+                            context.Payment.Comment += $"{DateTime.Now}: Paid successfully. Transaction Info {transactionId}, Invoice Number: {invoiceNumber}{Environment.NewLine}";
                             context.Payment.Transactions.Add(new PaymentGatewayTransaction()
                             {
                                 Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
                                 ResponseData = $"Account Number: {accountNumber}",
                                 Status = responseReasonText,
                                 ResponseCode = responseReasonCode,
-                                CurrencyCode = context.Payment.Currency.ToString(),
+                                CurrencyCode = context.Payment.Currency,
                                 Amount = decimal.Parse(totalPrice, CultureInfo.InvariantCulture),
                                 IsProcessed = true,
                                 ProcessedDate = DateTime.UtcNow
@@ -199,25 +201,25 @@ namespace Authorize.Net.Managers
                         retVal.OuterId = context.Payment.OuterId = transactionId;
                         context.Payment.AuthorizedDate = DateTime.UtcNow;
                         retVal.IsSuccess = true;
-                        retVal.ReturnUrl = string.Format("{0}/{1}/{2}", context.Store.Url, ThankYouPageRelativeUrl, context.Order.Number);
+                        retVal.ReturnUrl = $"{context.Store.Url}/{ThankYouPageRelativeUrl}/{context.Order.Number}";
                         break;
                     case "2":
                         context.Payment.Status = PaymentStatus.Declined.ToString();
                         var pmtResult2 = new ProcessPaymentResult();
-                        pmtResult2.Error = string.Format("your transaction was declined - {0} ({1}).", responseReasonText.Replace(".", ""), responseReasonCode);
+                        pmtResult2.Error = $"your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
                         context.Payment.ProcessPaymentResult = pmtResult2;
-                        context.Payment.Comment = pmtResult2.Error;
+                        context.Payment.Comment += $"{DateTime.Now}:{pmtResult2.Error}{Environment.NewLine}";
                         retVal.IsSuccess = false;
-                        retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
+                        retVal.ReturnUrl = $"{context.Store.Url}/cart/checkout/paymentform?orderNumber={context.Order.Number}";
                         break;
                     default:
                         context.Payment.Status = PaymentStatus.Error.ToString();
                         var pmtResult3 = new ProcessPaymentResult();
-                        pmtResult3.Error = string.Format("There was an error processing your transaction - {0} ({1})", responseReasonText.Replace(".", ""), responseReasonCode);
+                        pmtResult3.Error = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
                         context.Payment.ProcessPaymentResult = pmtResult3;
-                        context.Payment.Comment = pmtResult3.Error;
+                        context.Payment.Comment += $"{DateTime.Now}:{pmtResult3.Error}{Environment.NewLine}";
                         retVal.IsSuccess = false;
-                        retVal.ReturnUrl = string.Format("{0}/{1}?orderNumber={2}", context.Store.Url, "cart/checkout/paymentform", context.Order.Number);
+                        retVal.ReturnUrl = $"{context.Store.Url}/cart/checkout/paymentform?orderNumber={context.Order.Number}";
                         break;
                 }
             }
