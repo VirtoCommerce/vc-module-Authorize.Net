@@ -4,7 +4,7 @@
     <version>2.13.2</version>
     <platformVersion>2.13.53</platformVersion>
     <dependencies>
-        <dependency id="VirtoCommerce.Core" version="2.25.31" />
+        <dependency id="VirtoCommerce.Core" version="2.25.33" />
     </dependencies>
 
     <title>Authorize.Net DPM payment gateway</title>
