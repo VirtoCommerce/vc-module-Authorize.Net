@@ -15,7 +15,7 @@
 	  <PackageReference Include="AuthorizeNet.NetStandard" Version="0.1.0" />
 	  <PackageReference Include="VirtoCommerce.OrdersModule.Core" Version="3.0.0-rc.3-001" />
 	  <PackageReference Include="VirtoCommerce.PaymentModule.Core" Version="3.0.0-rc.3-001" />
-	  <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0-rc3-0141" />
-	  <PackageReference Include="VirtoCommerce.StoreModule.Core" Version="3.0.0-rc.3" />
+	  <PackageReference Include="VirtoCommerce.Platform.Core" Version="3.0.0-rc4" />
+	  <PackageReference Include="VirtoCommerce.StoreModule.Core" Version="3.0.0-rc.4" />
 	</ItemGroup>
  </Project>
