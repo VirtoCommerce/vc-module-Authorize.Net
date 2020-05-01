@@ -69,7 +69,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ConfirmationUrl.Name, string.Empty);
+                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ConfirmationUrl.Name,
+                    ModuleConstants.Settings.AuthorizeNet.ConfirmationUrl.DefaultValue.ToString());
             }
         }
 
@@ -77,7 +78,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ThankYouPageUrl.Name, string.Empty);
+                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.ThankYouPageUrl.Name,
+                    ModuleConstants.Settings.AuthorizeNet.ThankYouPageUrl.DefaultValue.ToString());
             }
         }
 
@@ -85,7 +87,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.PaymentActionType.Name, string.Empty);
+                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.PaymentActionType.Name,
+                    ModuleConstants.Settings.AuthorizeNet.PaymentActionType.DefaultValue.ToString());
             }
         }
 
@@ -93,7 +96,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         {
             get
             {
-                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.Mode.Name, string.Empty);
+                return Settings?.GetSettingValue(ModuleConstants.Settings.AuthorizeNet.Mode.Name,
+                    ModuleConstants.Settings.AuthorizeNet.Mode.DefaultValue.ToString());
             }
         }
 
