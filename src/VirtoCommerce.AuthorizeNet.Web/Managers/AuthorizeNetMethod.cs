@@ -221,6 +221,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         pmtResult2.ErrorMessage = $"your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
                         payment.ProcessPaymentResult = pmtResult2;
                         payment.Comment = pmtResult2.ErrorMessage;
+                        result.IsSuccess = false;
+                        result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
                     default:
                         payment.Status = "Error";
@@ -228,11 +230,10 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         pmtResult3.ErrorMessage = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
                         payment.ProcessPaymentResult = pmtResult3;
                         payment.Comment = pmtResult3.ErrorMessage;
+                        result.IsSuccess = false;
+                        result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
                 }
-
-                result.IsSuccess = false;
-                result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
             }
 
             return result;
