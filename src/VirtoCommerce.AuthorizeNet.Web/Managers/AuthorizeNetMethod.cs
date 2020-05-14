@@ -138,14 +138,14 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         case "1":
                             result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Paid;
                             payment.CapturedDate = DateTime.UtcNow;
-                            result.OuterId = payment.OuterId = string.Format("{0},{1}", responseFields[6], responseFields[4]);
+                            result.OuterId = payment.OuterId = $"{responseFields[6]},{responseFields[4]}";
                             result.IsSuccess = true;
                             payment.IsApproved = true;
                             break;
                         case "2":
-                            throw new InvalidOperationException(string.Format("Declined ({0}: {1})", responseFields[2], responseFields[3]));
+                            throw new InvalidOperationException($"{PaymentStatus.Declined} ({responseFields[2]}: {responseFields[3]})");
                         case "3":
-                            throw new InvalidOperationException(string.Format("Error: {0}", reply));
+                            throw new InvalidOperationException($"{PaymentStatus.Error}: {reply}");
                     }
                 }
                 else
@@ -216,7 +216,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         result.ReturnUrl = $"{store.Url}/{ThankYouPageUrl}/{order.Number}";
                         break;
                     case "2":
-                        payment.Status = "Declined";
+                        payment.Status = PaymentStatus.Declined.ToString();
                         var pmtResult2 = new ProcessPaymentRequestResult();
                         pmtResult2.ErrorMessage = $"your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
                         payment.ProcessPaymentResult = pmtResult2;
@@ -225,7 +225,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
                     default:
-                        payment.Status = "Error";
+                        payment.Status = PaymentStatus.Error.ToString();
                         var pmtResult3 = new ProcessPaymentRequestResult();
                         pmtResult3.ErrorMessage = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
                         payment.ProcessPaymentResult = pmtResult3;
@@ -263,6 +263,22 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var checkoutform = string.Empty;
 
             checkoutform += string.Format("<form action='{0}' method='POST'>", GetAuthorizeNetUrl());
+
+            if (payment.Status != null && (payment.Status == PaymentStatus.Declined.ToString() || payment.Status == PaymentStatus.Error.ToString()))
+            {
+                var tranResponse = "An unknown error occurred.  Please contact customer service.";
+                if (payment.Status == PaymentStatus.Declined.ToString())
+                {
+                    tranResponse = "Your transaction was declined.";
+                }
+
+                else if (payment.Status == PaymentStatus.Error.ToString())
+                {
+                    tranResponse = payment.Comment ?? "Cannot get error.";
+                }
+
+                checkoutform += string.Format("<p><div style='width:350px;' class='note form-error'>{0} Please try again.</div></p><div style='clear:both'></div>", tranResponse);
+            }
 
             //credit cart inputs for user
             checkoutform += string.Format("<p><div style='float:left;width:250px;'><label>Credit Card Number</label><div id = 'CreditCardNumber'>{0}</div></div>", CreateInput(false, "x_card_num", "", 28));
