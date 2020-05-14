@@ -250,6 +250,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
 #pragma warning restore S1481 // Unused local variables should be removed
 
+            var userIp = request.Parameters["True-Client-IP"];
+
             var sequence = new Random().Next(0, 1000).ToString();
             var timeStamp = ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString();
             var currency = payment.Currency.ToString();
@@ -280,6 +282,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             checkoutform += CreateInput(true, "x_fp_hash", fingerprint);
             checkoutform += CreateInput(true, "x_currency_code", currency);
             checkoutform += CreateInput(true, "x_amount", payment.Sum.ToString("F", CultureInfo.InvariantCulture));
+
+            if (!string.IsNullOrEmpty(userIp))
+            {
+                checkoutform += CreateInput(true, "x_customer_ip", userIp);
+            }
 
             checkoutform += GetAuthOrCapture();
 
