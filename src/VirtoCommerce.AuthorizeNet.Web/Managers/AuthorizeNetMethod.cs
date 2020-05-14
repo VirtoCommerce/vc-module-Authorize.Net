@@ -296,7 +296,16 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         public override RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest context)
         {
-            throw new NotImplementedException();
+            var payment = context.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(context.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
+
+            var refundStatus = new RefundPaymentRequestResult { IsSuccess = true, ErrorMessage = "" };
+            if (payment.IsApproved && payment.PaymentStatus == PaymentStatus.Paid)
+            {
+                payment.PaymentStatus = refundStatus.NewPaymentStatus = PaymentStatus.Refunded;
+                payment.Status = PaymentStatus.Refunded.ToString();
+                payment.VoidedDate = DateTime.UtcNow;
+            }
+            return refundStatus;
         }
 
         public override ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
