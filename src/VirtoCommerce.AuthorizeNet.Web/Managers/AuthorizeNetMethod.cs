@@ -13,6 +13,7 @@ using VirtoCommerce.PaymentModule.Model.Requests;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.StoreModule.Core.Model;
+using Environment = System.Environment;
 
 namespace VirtoCommerce.AuthorizeNet.Web.Managers
 {
@@ -193,6 +194,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                             payment.Status = PaymentStatus.Paid.ToString();
                             payment.CapturedDate = DateTime.UtcNow;
                             payment.IsApproved = true;
+                            payment.Comment = $"Paid successfully. Transaction Info {transactionId}, Invoice Number: {invoiceNumber}{Environment.NewLine}";
                             payment.Transactions.Add(new PaymentGatewayTransaction()
                             {
                                 Note = $"Transaction Info {transactionId}, Invoice Number: {invoiceNumber}",
@@ -220,7 +222,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         var pmtResult2 = new ProcessPaymentRequestResult();
                         pmtResult2.ErrorMessage = $"your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
                         payment.ProcessPaymentResult = pmtResult2;
-                        payment.Comment = pmtResult2.ErrorMessage;
+                        payment.Comment = $"{pmtResult2.ErrorMessage}{Environment.NewLine}";
                         result.IsSuccess = false;
                         result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
@@ -229,7 +231,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         var pmtResult3 = new ProcessPaymentRequestResult();
                         pmtResult3.ErrorMessage = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
                         payment.ProcessPaymentResult = pmtResult3;
-                        payment.Comment = pmtResult3.ErrorMessage;
+                        payment.Comment = $"{pmtResult3.ErrorMessage}{Environment.NewLine}";
                         result.IsSuccess = false;
                         result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
@@ -250,8 +252,13 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
 #pragma warning restore S1481 // Unused local variables should be removed
 
-            var userIp = request.Parameters["True-Client-IP"];
+            var userIp = string.Empty;
 
+            if (request.Parameters != null)
+            {
+                userIp = request.Parameters["True-Client-IP"];
+            }
+                
             var sequence = new Random().Next(0, 1000).ToString();
             var timeStamp = ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString();
             var currency = payment.Currency.ToString();
