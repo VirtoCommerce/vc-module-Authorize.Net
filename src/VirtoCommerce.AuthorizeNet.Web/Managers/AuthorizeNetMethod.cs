@@ -386,6 +386,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                     payment.IsCancelled = true;
                     result.IsSuccess = true;
                     result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Voided;
+                    payment.Status = PaymentStatus.Voided.ToString();
                     payment.VoidedDate = payment.CancelledDate = DateTime.UtcNow;
                 }
                 else
