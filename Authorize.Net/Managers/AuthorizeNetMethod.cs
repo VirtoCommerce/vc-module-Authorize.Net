@@ -429,8 +429,8 @@ namespace Authorize.Net.Managers
 
         private string GetDataString(NameValueCollection queryString)
         {
-            // var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_state", "x_zip", "x_country", "x_phone", "x_fa", "x_email", "x_ship_to_company", "x_ship_to_first_name", "x_ship_to_last_name", "x_ship_to_address", "x_ship_to_city", "x_ship_to_state", "x_ship_to_zip", "x_ship_to_country", "x_invoice_num" };
-            var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_stat", "x_zi", "x_countr", "x_phon", "x_fa", "x_emai", "x_ship_to_compan", "x_ship_to_first_nam", "x_ship_to_last_nam", "x_ship_to_addres", "x_ship_to_cit", "x_ship_to_stat", "x_ship_to_zi", "x_ship_to_countr", "x_invoice_num" };
+            // Fields from the Response (p73) https://www.authorize.net/content/dam/anet-redesign/documents/SIM_guide.pdf
+            var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_state", "x_zip", "x_country", "x_phone", "x_fax", "x_email", "x_ship_to_company", "x_ship_to_first_name", "x_ship_to_last_name", "x_ship_to_address", "x_ship_to_city", "x_ship_to_state", "x_ship_to_zip", "x_ship_to_country", "x_invoice_num" };
             var dataString = new StringBuilder();
 
             foreach (var parameter in parameters)
