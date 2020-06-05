@@ -204,21 +204,27 @@ namespace Authorize.Net.Managers
                         retVal.ReturnUrl = $"{context.Store.Url}/{ThankYouPageRelativeUrl}/{context.Order.Number}";
                         break;
                     case "2":
-                        context.Payment.Status = PaymentStatus.Declined.ToString();
-                        var pmtResult2 = new ProcessPaymentResult();
-                        pmtResult2.Error = $"Your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
-                        context.Payment.ProcessPaymentResult = pmtResult2;
-                        context.Payment.Comment = $"{pmtResult2.Error}{Environment.NewLine}";
-                        retVal.IsSuccess = false;
+                        if (context.Payment.PaymentStatus != PaymentStatus.Paid)
+                        {
+                            context.Payment.Status = PaymentStatus.Declined.ToString();
+                            var pmtResult2 = new ProcessPaymentResult();
+                            pmtResult2.Error = $"Your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
+                            context.Payment.ProcessPaymentResult = pmtResult2;
+                            context.Payment.Comment = $"{pmtResult2.Error}{Environment.NewLine}";
+                            retVal.IsSuccess = false;
+                        }
                         retVal.ReturnUrl = $"{context.Store.Url}/cart/checkout/paymentform?orderNumber={context.Order.Number}";
                         break;
                     default:
-                        context.Payment.Status = PaymentStatus.Error.ToString();
-                        var pmtResult3 = new ProcessPaymentResult();
-                        pmtResult3.Error = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
-                        context.Payment.ProcessPaymentResult = pmtResult3;
-                        context.Payment.Comment = $"{pmtResult3.Error}{Environment.NewLine}";
-                        retVal.IsSuccess = false;
+                        if (context.Payment.PaymentStatus != PaymentStatus.Paid)
+                        {
+                            context.Payment.Status = PaymentStatus.Error.ToString();
+                            var pmtResult3 = new ProcessPaymentResult();
+                            pmtResult3.Error = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
+                            context.Payment.ProcessPaymentResult = pmtResult3;
+                            context.Payment.Comment = $"{pmtResult3.Error}{Environment.NewLine}";
+                            retVal.IsSuccess = false;
+                        }
                         retVal.ReturnUrl = $"{context.Store.Url}/cart/checkout/paymentform?orderNumber={context.Order.Number}";
                         break;
                 }
