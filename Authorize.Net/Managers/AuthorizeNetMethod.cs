@@ -243,7 +243,7 @@ namespace Authorize.Net.Managers
                 {
                     //return to thanks page
                     retVal.IsSuccess = true;
-                    retVal.HtmlForm = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", $"/store{context.Store.Url}/{ThankYouPageRelativeUrl}/{context.Order.Number}");
+                    retVal.HtmlForm = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", $"{context.Store.Url}/{ThankYouPageRelativeUrl}/{context.Order.Number}");
                     return retVal;
                 }
 
