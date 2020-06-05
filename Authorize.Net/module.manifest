@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <module>
     <id>Authorize.Net</id>
-    <version>2.13.3</version>
+    <version>2.13.4</version>
     <platformVersion>2.13.53</platformVersion>
     <dependencies>
         <dependency id="VirtoCommerce.Core" version="2.25.33" />
@@ -18,7 +18,7 @@
     <projectUrl>https://virtocommerce.com/apps/extensions/authorizenet-dpm-payment-gateway</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/VirtoCommerce/vc-module-Authorize.Net/master/Authorize.Net/Content/Authorizenet_logo.png</iconUrl>
     <releaseNotes>First version.</releaseNotes>
-    <copyright>Copyright © 2011-2019 Virto Commerce. All rights reserved</copyright>
+    <copyright>Copyright © 2011-2020 Virto Commerce. All rights reserved</copyright>
     <tags>Authorize.Net payment gateway</tags>
 
     <assemblyFile>Authorize.Net.dll</assemblyFile>
