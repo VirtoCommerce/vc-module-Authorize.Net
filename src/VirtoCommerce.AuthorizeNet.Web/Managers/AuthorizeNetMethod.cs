@@ -151,7 +151,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 }
                 else
                 {
-                    throw new InvalidOperationException("Authorize.NET unknown error");
+                    throw new InvalidOperationException("Authorize.NET (Credit card) unknown error");
                 }
             }
 
@@ -215,24 +215,30 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         result.OuterId = payment.OuterId = transactionId;
                         payment.AuthorizedDate = DateTime.UtcNow;
                         result.IsSuccess = true;
-                        result.ReturnUrl = $"{store.Url}/{ThankYouPageUrl}/{order.Number}";
+                        result.ReturnUrl = $"{ThankYouPageUrl}/{order.Number}";
                         break;
                     case "2":
-                        payment.Status = PaymentStatus.Declined.ToString();
-                        var pmtResult2 = new ProcessPaymentRequestResult();
-                        pmtResult2.ErrorMessage = $"your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
-                        payment.ProcessPaymentResult = pmtResult2;
-                        payment.Comment = $"{pmtResult2.ErrorMessage}{Environment.NewLine}";
-                        result.IsSuccess = false;
+                        if (payment.PaymentStatus != PaymentStatus.Paid)
+                        {
+                            payment.Status = PaymentStatus.Declined.ToString();
+                            var pmtResult2 = new ProcessPaymentRequestResult();
+                            pmtResult2.ErrorMessage = $"Your transaction was declined - {responseReasonText.Replace(".", "")} ({responseReasonCode}).";
+                            payment.ProcessPaymentResult = pmtResult2;
+                            payment.Comment = $"{pmtResult2.ErrorMessage}{Environment.NewLine}";
+                            result.IsSuccess = false;
+                        }
                         result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
                     default:
-                        payment.Status = PaymentStatus.Error.ToString();
-                        var pmtResult3 = new ProcessPaymentRequestResult();
-                        pmtResult3.ErrorMessage = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
-                        payment.ProcessPaymentResult = pmtResult3;
-                        payment.Comment = $"{pmtResult3.ErrorMessage}{Environment.NewLine}";
-                        result.IsSuccess = false;
+                        if (payment.PaymentStatus != PaymentStatus.Paid)
+                        {
+                            payment.Status = PaymentStatus.Error.ToString();
+                            var pmtResult3 = new ProcessPaymentRequestResult();
+                            pmtResult3.ErrorMessage = $"There was an error processing your transaction - {responseReasonText.Replace(".", "")} ({responseReasonCode})";
+                            payment.ProcessPaymentResult = pmtResult3;
+                            payment.Comment = $"{pmtResult3.ErrorMessage}{Environment.NewLine}";
+                            result.IsSuccess = false;
+                        }
                         result.ReturnUrl = $"{store.Url}/cart/checkout/paymentform?orderNumber={order.Number}";
                         break;
                 }
@@ -252,13 +258,21 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
 #pragma warning restore S1481 // Unused local variables should be removed
 
+            if (payment.PaymentStatus == PaymentStatus.Paid)
+            {
+                //return to thanks page
+                result.IsSuccess = true;
+                result.HtmlForm = string.Format("<html><head><script type='text/javascript' charset='utf-8'>window.location='{0}';</script><noscript><meta http-equiv='refresh' content='1;url={0}'></noscript></head><body></body></html>", $"{ThankYouPageUrl}/{order.Number}");
+                return result;
+            }
+
             var userIp = string.Empty;
 
             if (request.Parameters != null)
             {
                 userIp = request.Parameters["True-Client-IP"];
             }
-                
+
             var sequence = new Random().Next(0, 1000).ToString();
             var timeStamp = ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString();
             var currency = payment.Currency.ToString();
@@ -267,9 +281,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var confirmationUrl = string.Format("{0}/{1}", ConfirmationUrl, request.Order.Id);
 
-            var checkoutform = string.Empty;
-
-            checkoutform += string.Format("<form action='{0}' method='POST'>", GetAuthorizeNetUrl());
+            var checkoutform = string.Format("<form action='{0}' method='POST'>", GetAuthorizeNetUrl());
 
             if (payment.Status != null && (payment.Status == PaymentStatus.Declined.ToString() || payment.Status == PaymentStatus.Error.ToString()))
             {
@@ -315,7 +327,6 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             // Add a Submit button
             checkoutform += "<div style='clear:both'></div><p><input type='submit' class='submit' value='Pay with Authorize.NET' /></p></form>";
-
             checkoutform += "</form>";
 
             result.HtmlForm = checkoutform;
@@ -413,7 +424,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         private string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
         {
-            var retVal = string.Empty;
+            string retVal;
             if (isHidden)
             {
                 retVal = string.Format("<input type='hidden' name='{0}' id='{0}' value='{1}' />", inputName, inputValue);
@@ -451,7 +462,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         private string GetDataString(NameValueCollection queryString)
         {
-            var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_stat", "x_zi", "x_countr", "x_phon", "x_fa", "x_emai", "x_ship_to_compan", "x_ship_to_first_nam", "x_ship_to_last_nam", "x_ship_to_addres", "x_ship_to_cit", "x_ship_to_stat", "x_ship_to_zi", "x_ship_to_countr", "x_invoice_num" };
+            // Fields from the Response (p73) https://www.authorize.net/content/dam/anet-redesign/documents/SIM_guide.pdf
+            var parameters = new[] { "x_trans_id", "x_test_request", "x_response_code", "x_auth_code", "x_cvv2_resp_code", "x_cavv_response", "x_avs_code", "x_method", "x_account_number", "x_amount", "x_company", "x_first_name", "x_last_name", "x_address", "x_city", "x_state", "x_zip", "x_country", "x_phone", "x_fax", "x_email", "x_ship_to_company", "x_ship_to_first_name", "x_ship_to_last_name", "x_ship_to_address", "x_ship_to_city", "x_ship_to_state", "x_ship_to_zip", "x_ship_to_country", "x_invoice_num" };
             var dataString = new StringBuilder();
 
             foreach (var parameter in parameters)
@@ -491,7 +503,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         private string GetAuthorizeNetUrl()
         {
-            var retVal = string.Empty;
+            string retVal;
             if (Mode == "test")
             {
                 retVal = "https://test.authorize.net/gateway/transact.dll";
