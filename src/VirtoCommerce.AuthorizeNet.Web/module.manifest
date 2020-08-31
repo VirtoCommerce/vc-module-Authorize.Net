@@ -21,7 +21,7 @@
     <projectUrl>https://virtocommerce.com/apps/extensions/authorizenet-dpm-payment-gateway</projectUrl>
     <iconUrl>Modules/$(VirtoCommerce.AuthorizeNet)/Content/Authorizenet_logo.png</iconUrl>
     <releaseNotes>First version.</releaseNotes>
-    <copyright>Copyright В© 2011-2020 Virto Commerce. All rights reserved</copyright>
+    <copyright>Copyright © 2011-2020 Virto Commerce. All rights reserved</copyright>
     <tags>Authorize.Net payment gateway</tags>
     <assemblyFile>VirtoCommerce.AuthorizeNet.Web.dll</assemblyFile>
     <moduleType>VirtoCommerce.AuthorizeNet.Web.Module, VirtoCommerce.AuthorizeNet.Web</moduleType>
