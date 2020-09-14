@@ -23,7 +23,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         public AuthorizeNetMethod(IOptions<AuthorizeNetSecureOptions> options) : base(nameof(AuthorizeNetMethod))
         {
-            _options = options.Value;
+            _options = options?.Value ?? new AuthorizeNetSecureOptions();
         }
 
         public override PaymentMethodGroupType PaymentMethodGroupType
