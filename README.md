@@ -1,4 +1,7 @@
 # Authorize.Net DPM payment gateway integration module
+
+[![CI status](https://github.com/VirtoCommerce/vc-module-Authorize.Net/workflows/Module%20CI/badge.svg?branch=dev)](https://github.com/VirtoCommerce/vc-module-Authorize.Net/actions?query=workflow%3A"Module+CI") [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=alert_status&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net) [![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=reliability_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net) [![Security rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=security_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net) [![Sqale rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=sqale_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net)
+
 Authorize.Net Direct Post Method (DPM) payment gateway module provides integration with Authorize.Net DPM through <a href="http://developer.authorize.net/api" target="_blank">Payment Form (SIM)</a> API.
 
 # Installation
