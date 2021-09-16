@@ -210,6 +210,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                         else if (PaymentActionType == "Authorization/Capture")
                         {
                             result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Authorized;
+                            payment.Status = PaymentStatus.Authorized.ToString();
                         }
 
                         result.OuterId = payment.OuterId = transactionId;
@@ -385,7 +386,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
 
-            if (payment.PaymentStatus == PaymentStatus.Cancelled)
+            if (payment.PaymentStatus == PaymentStatus.Authorized)
             {
                 var voidRequest = new VoidRequest(payment.OuterId);
                 var gate = new Gateway(ApiLogin, TxnKey, true);
