@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <module xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <id>VirtoCommerce.AuthorizeNet</id>
-  <version>3.5.0</version>
+  <version>3.200.0</version>
   <version-tag />
-  <platformVersion>3.0.0</platformVersion>
+  <platformVersion>3.200.0</platformVersion>
   <title>Authorize.Net DPM payment gateway</title>
   <description>APIs and UI for Authorize.Net Direct Post Method (DPM) payment gateway</description>
   <authors>
@@ -16,14 +16,14 @@
   <iconUrl>Modules/$(VirtoCommerce.AuthorizeNet)/Content/Authorizenet_logo.png</iconUrl>
   <requireLicenseAcceptance>false</requireLicenseAcceptance>
   <releaseNotes>First version.</releaseNotes>
-  <copyright>Copyright © 2011-2020 Virto Commerce. All rights reserved</copyright>
+  <copyright>Copyright © 2011-2021 Virto Commerce. All rights reserved</copyright>
   <tags>Authorize.Net payment gateway</tags>
   <assemblyFile>VirtoCommerce.AuthorizeNet.Web.dll</assemblyFile>
   <moduleType>VirtoCommerce.AuthorizeNet.Web.Module, VirtoCommerce.AuthorizeNet.Web</moduleType>
   <dependencies>
-    <dependency id="VirtoCommerce.Store" version="3.0.0" />
-    <dependency id="VirtoCommerce.Orders" version="3.0.0" />
-    <dependency id="VirtoCommerce.Payment" version="3.0.2" />
+    <dependency id="VirtoCommerce.Store" version="3.200.0" />
+    <dependency id="VirtoCommerce.Orders" version="3.200.0" />
+    <dependency id="VirtoCommerce.Payment" version="3.200.0" />
   </dependencies>
   <useFullTypeNameInSwagger>false</useFullTypeNameInSwagger>
 </module>
