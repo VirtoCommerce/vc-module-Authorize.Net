@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <IsPackable>false</IsPackable>
     <Description>Authorize.Net API for .NET Standard. Use this SDK to integrate with the Authorize.Net AIM, SIM, ARB and CIM APIs for Payment Transactions, Recurring Billing and Customer Payment Profiles.</Description>
     <Version>0.1.0</Version>
     <Authors>Authorize.Net, Clayton Davis</Authors>
