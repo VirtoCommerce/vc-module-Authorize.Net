@@ -3,9 +3,12 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using VirtoCommerce.OrdersModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Model.Requests;
@@ -18,10 +21,14 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 {
     public class AuthorizeNetMethod : PaymentMethod
     {
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly AuthorizeNetSecureOptions _options;
 
-        public AuthorizeNetMethod(IOptions<AuthorizeNetSecureOptions> options) : base(nameof(AuthorizeNetMethod))
+        public AuthorizeNetMethod(
+            IOptions<AuthorizeNetSecureOptions> options,
+            IHttpClientFactory httpClientFactory) : base(nameof(AuthorizeNetMethod))
         {
+            _httpClientFactory = httpClientFactory;
             _options = options?.Value ?? new AuthorizeNetSecureOptions();
         }
 
@@ -106,53 +113,57 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var result = AbstractTypeFactory<CapturePaymentRequestResult>.TryCreateInstance();
             var payment = context.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(context.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
 
-            using (var webClient = new WebClient())
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var form = new NameValueCollection
             {
-                var form = new NameValueCollection();
-                form.Add("x_login", ApiLogin);
-                form.Add("x_tran_key", TxnKey);
+                { "x_login", ApiLogin },
+                { "x_tran_key", TxnKey },
+                { "x_delim_data", "TRUE" },
+                { "x_delim_char", "|" },
+                { "x_encap_char", "" },
+                { "x_version", ApiVersion },
+                { "x_method", "CC" },
+                { "x_currency_code", payment.Currency.ToString() },
+                { "x_type", "CAPTURE_ONLY" }
+            };
 
-                form.Add("x_delim_data", "TRUE");
-                form.Add("x_delim_char", "|");
-                form.Add("x_encap_char", "");
-                form.Add("x_version", ApiVersion);
-                form.Add("x_method", "CC");
-                form.Add("x_currency_code", payment.Currency.ToString());
-                form.Add("x_type", "CAPTURE_ONLY");
+            var orderTotal = Math.Round(payment.Sum, 2);
+            form.Add("x_amount", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
 
-                var orderTotal = Math.Round(payment.Sum, 2);
-                form.Add("x_amount", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
+            //x_trans_id. When x_test_request (sandbox) is set to a positive response, 
+            //or when Test mode is enabled on the payment gateway, this value will be "0".
+            form.Add("x_trans_id", payment.OuterId);
 
-                //x_trans_id. When x_test_request (sandbox) is set to a positive response, 
-                //or when Test mode is enabled on the payment gateway, this value will be "0".
-                form.Add("x_trans_id", payment.OuterId);
+            var httpContent = new MultipartFormDataContent();
+            httpContent.Add(new StringContent(JsonSerializer.Serialize(form)));
 
-                var responseData = webClient.UploadValues(GetAuthorizeNetUrl(), form);
-                var reply = Encoding.ASCII.GetString(responseData);
+            var responseData = httpClient.PostAsync(GetAuthorizeNetUrl(), httpContent).GetAwaiter().GetResult();
+            var reply = responseData.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
-                if (!string.IsNullOrEmpty(reply))
+            if (!string.IsNullOrEmpty(reply))
+            {
+                string[] responseFields = reply.Split('|');
+                switch (responseFields[0])
                 {
-                    string[] responseFields = reply.Split('|');
-                    switch (responseFields[0])
-                    {
-                        case "1":
-                            result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Paid;
-                            payment.CapturedDate = DateTime.UtcNow;
-                            result.OuterId = payment.OuterId = $"{responseFields[6]},{responseFields[4]}";
-                            result.IsSuccess = true;
-                            payment.IsApproved = true;
-                            break;
-                        case "2":
-                            throw new InvalidOperationException($"{PaymentStatus.Declined} ({responseFields[2]}: {responseFields[3]})");
-                        case "3":
-                            throw new InvalidOperationException($"{PaymentStatus.Error}: {reply}");
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException("Authorize.NET (Credit card) unknown error");
+                    case "1":
+                        result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Paid;
+                        payment.CapturedDate = DateTime.UtcNow;
+                        result.OuterId = payment.OuterId = $"{responseFields[6]},{responseFields[4]}";
+                        result.IsSuccess = true;
+                        payment.IsApproved = true;
+                        break;
+                    case "2":
+                        throw new InvalidOperationException($"{PaymentStatus.Declined} ({responseFields[2]}: {responseFields[3]})");
+                    case "3":
+                        throw new InvalidOperationException($"{PaymentStatus.Error}: {reply}");
                 }
             }
+            else
+            {
+                throw new InvalidOperationException("Authorize.NET (Credit card) unknown error");
+            }
+            
 
             return result;
         }
@@ -274,10 +285,10 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             }
 
             var sequence = new Random().Next(0, 1000).ToString();
-            var timeStamp = ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString();
+            var timeStamp = ((int)(DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds).ToString();
             var currency = payment.Currency.ToString();
 
-            var fingerprint = HmacMD5(TxnKey, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
+            var fingerprint = HMACSHA512(TxnKey, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
 
             var confirmationUrl = string.Format("{0}/{1}", ConfirmationUrl, request.Order.Id);
 
@@ -441,27 +452,6 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         }
 
         private const string ApiVersion = "3.1";
-
-        private string HmacMD5(string key, string value)
-        {
-            var encKey = (new ASCIIEncoding()).GetBytes(key);
-            var encData = (new ASCIIEncoding()).GetBytes(value);
-
-            // create a HMACMD5 object with the key set
-            var myhmacMD5 = new HMACMD5(encKey);
-
-            // calculate the hash (returns a byte array)
-            var hash = myhmacMD5.ComputeHash(encData);
-
-            // loop through the byte array and add append each piece to a string to obtain a hash string
-            var fingerprint = new StringBuilder();
-            for (int i = 0; i < hash.Length; i++)
-            {
-                fingerprint.Append(hash[i].ToString("x").PadLeft(2, '0'));
-            }
-
-            return fingerprint.ToString();
-        }
 
         private string GetDataString(NameValueCollection queryString)
         {
