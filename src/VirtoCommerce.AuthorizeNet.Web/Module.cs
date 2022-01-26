@@ -21,8 +21,6 @@ namespace VirtoCommerce.AuthorizeNet.Web
 
         public void Initialize(IServiceCollection serviceCollection)
         {
-            var snapshot = serviceCollection.BuildServiceProvider();
-
             serviceCollection.AddOptions<AuthorizeNetSecureOptions>().Bind(Configuration.GetSection("Payments:AuthorizeNet")).ValidateDataAnnotations();
             serviceCollection.AddTransient<IAuthorizeNetRegisterPaymentService, AuthorizeNetRegisterPaymentService>();
         }
