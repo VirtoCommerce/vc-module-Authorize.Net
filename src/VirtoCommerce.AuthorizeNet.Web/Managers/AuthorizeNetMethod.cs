@@ -143,7 +143,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             if (!string.IsNullOrEmpty(reply))
             {
-                string[] responseFields = reply.Split('|');
+                var responseFields = reply.Split('|');
                 switch (responseFields[0])
                 {
                     case "1":
@@ -264,10 +264,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
             var order = request.Order as CustomerOrder ?? throw new InvalidOperationException($"\"{nameof(request.Order)}\" should not be null and of \"{nameof(CustomerOrder)}\" type.");
-#pragma warning disable S1481 // Unused local variables should be removed
-            // Need to check shop existence, though not using it
-            var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
-#pragma warning restore S1481 // Unused local variables should be removed
+
+            if (request.Store as Store is null)
+            {
+                throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
+            }
 
             if (payment.PaymentStatus == PaymentStatus.Paid)
             {
