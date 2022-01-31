@@ -2,13 +2,11 @@ using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 using VirtoCommerce.OrdersModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Model.Requests;
@@ -163,7 +161,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             {
                 throw new InvalidOperationException("Authorize.NET (Credit card) unknown error");
             }
-            
+
 
             return result;
         }
@@ -174,10 +172,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
             var order = request.Order as CustomerOrder ?? throw new InvalidOperationException($"\"{nameof(request.Order)}\" should not be null and of \"{nameof(CustomerOrder)}\" type.");
-#pragma warning disable S1481 // Unused local variables should be removed
-            // Need to check shop existence, though not using it
             var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
-#pragma warning restore S1481 // Unused local variables should be removed
 
             var transactionId = request.Parameters["x_split_tender_id"] ?? request.Parameters["x_trans_id"];
             var invoiceNumber = request.Parameters["x_invoice_num"];
@@ -289,7 +284,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var timeStamp = ((int)(DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds).ToString();
             var currency = payment.Currency.ToString();
 
-            var fingerprint = HMACSHA512(TxnKey, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
+            var fingerprint = HMACSHA512(SHA5Hash, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
 
             var confirmationUrl = string.Format("{0}/{1}", ConfirmationUrl, request.Order.Id);
 
@@ -441,26 +436,33 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
         private string HMACSHA512(string key, string textToHash)
         {
             if (string.IsNullOrEmpty(key))
-                throw new ArgumentNullException("key", "HMACSHA512: Parameter key cannot be empty.");
+            {
+                throw new ArgumentNullException(nameof(key), "HMACSHA512: Parameter key cannot be empty.");
+            }
+
             if (string.IsNullOrEmpty(textToHash))
-                throw new ArgumentNullException("textToHash", "HMACSHA512: Parameter textToHash cannot be empty.");
+            {
+                throw new ArgumentNullException(nameof(textToHash), "HMACSHA512: Parameter textToHash cannot be empty.");
+            }
+
             if (key.Length % 2 != 0 || key.Trim().Length < 2)
             {
                 throw new ArgumentException("HMACSHA512: Parameter key cannot be odd or less than 2 characters.", "key");
             }
+
             try
             {
-                byte[] k = Enumerable.Range(0, key.Length)
+                var k = Enumerable.Range(0, key.Length)
                     .Where(x => x % 2 == 0)
                     .Select(x => Convert.ToByte(key.Substring(x, 2), 16))
                     .ToArray();
-                HMACSHA512 hmac = new HMACSHA512(k);
-                byte[] HashedValue = hmac.ComputeHash((new System.Text.ASCIIEncoding()).GetBytes(textToHash));
-                return BitConverter.ToString(HashedValue).Replace("-", string.Empty);
+                var hmac = new HMACSHA512(k);
+                var hashedValue = hmac.ComputeHash(new ASCIIEncoding().GetBytes(textToHash));
+                return BitConverter.ToString(hashedValue).Replace("-", string.Empty);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new ArgumentException("HMACSHA512: " + ex.Message);
+                throw;
             }
         }
 
