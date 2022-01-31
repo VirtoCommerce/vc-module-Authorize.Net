@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using AuthorizeNet;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.OrdersModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model;
@@ -388,7 +389,35 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         public override VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
         {
-            return null;
+            var result = AbstractTypeFactory<VoidPaymentRequestResult>.TryCreateInstance();
+
+            var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
+
+            if (payment.PaymentStatus == PaymentStatus.Authorized)
+            {
+                var voidRequest = new VoidRequest(payment.OuterId);
+                var gate = new Gateway(ApiLogin, TxnKey, true);
+                var response = gate.Send(voidRequest);
+
+                if (response.Approved)
+                {
+                    payment.IsCancelled = true;
+                    result.IsSuccess = true;
+                    result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Voided;
+                    payment.Status = PaymentStatus.Voided.ToString();
+                    payment.VoidedDate = payment.CancelledDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    result.ErrorMessage = response.Message;
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Only authorized payments can be voided");
+            }
+
+            return result;
         }
 
         private string GetAuthOrCapture()
