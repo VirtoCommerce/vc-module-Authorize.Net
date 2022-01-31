@@ -35,7 +35,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Services
             var order = await _customerOrderService.GetByIdAsync(orderId);
             if (order == null)
             {
-                throw new ArgumentException("Order for specified orderId not found.", "orderId");
+                throw new ArgumentException("Order for specified orderId not found.", nameof(orderId));
             }
 
             var store = await _storeService.GetByIdAsync(order.StoreId);
