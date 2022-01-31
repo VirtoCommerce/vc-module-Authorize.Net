@@ -5,22 +5,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.AuthorizeNet.Web.Managers;
 using VirtoCommerce.OrdersModule.Core.Model;
-using VirtoCommerce.OrdersModule.Core.Services;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Model.Requests;
 using VirtoCommerce.Platform.Core.Common;
-using VirtoCommerce.StoreModule.Core.Services;
+using VirtoCommerce.Platform.Core.GenericCrud;
+using VirtoCommerce.StoreModule.Core.Model;
 
 namespace VirtoCommerce.AuthorizeNet.Web.Services
 {
     public class AuthorizeNetRegisterPaymentService : IAuthorizeNetRegisterPaymentService
     {
-        private readonly ICustomerOrderService _customerOrderService;
-        private readonly IStoreService _storeService;
+        private readonly ICrudService<CustomerOrder> _customerOrderService;
         private readonly IPaymentMethodsSearchService _paymentMethodsSearchService;
-
-        public AuthorizeNetRegisterPaymentService(ICustomerOrderService customerOrderService, IStoreService storeService, IPaymentMethodsSearchService paymentMethodsSearchService)
+        private readonly ICrudService<Store> _storeService;
+        public AuthorizeNetRegisterPaymentService(
+            ICrudService<CustomerOrder> customerOrderService,
+            ICrudService<Store> storeService,
+            IPaymentMethodsSearchService paymentMethodsSearchService)
         {
             _customerOrderService = customerOrderService;
             _storeService = storeService;
@@ -30,7 +32,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Services
         public async Task<string> RegisterPaymentAsync(string orderId, NameValueCollection paymentParameters)
         {
             string result = null;
-            var order = (await _customerOrderService.GetByIdsAsync(new[] { orderId })).FirstOrDefault();
+            var order = await _customerOrderService.GetByIdAsync(orderId);
             if (order == null)
             {
                 throw new ArgumentException("Order for specified orderId not found.", "orderId");
