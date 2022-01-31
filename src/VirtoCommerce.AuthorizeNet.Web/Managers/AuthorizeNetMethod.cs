@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using AuthorizeNet;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.OrdersModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model;
@@ -381,7 +382,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         public override VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
         {
-            /*
+            
             var result = AbstractTypeFactory<VoidPaymentRequestResult>.TryCreateInstance();
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
@@ -411,8 +412,6 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 throw new InvalidOperationException("Only authorized payments can be voided");
             }
             return result;
-            */
-            return null;
         }
 
         private string GetAuthOrCapture()
