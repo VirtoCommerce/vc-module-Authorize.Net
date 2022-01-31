@@ -401,7 +401,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 throw new InvalidOperationException($@"PaymentActionType {PaymentActionType} is not available");
         }
 
-        private string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
+        private static string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
         {
             string retVal;
             if (isHidden)
@@ -429,11 +429,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 dataString.Append($"^{queryString[parameter]}");
             }
 
-            dataString.Append("^");
+            dataString.Append('^');
             return dataString.ToString();
         }
 
-        private string HMACSHA512(string key, string textToHash)
+        private static string HMACSHA512(string key, string textToHash)
         {
             if (string.IsNullOrEmpty(key))
             {
@@ -447,7 +447,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             if (key.Length % 2 != 0 || key.Trim().Length < 2)
             {
-                throw new ArgumentException("HMACSHA512: Parameter key cannot be odd or less than 2 characters.", "key");
+                throw new ArgumentException("HMACSHA512: Parameter key cannot be odd or less than 2 characters.", nameof(key));
             }
 
             try
