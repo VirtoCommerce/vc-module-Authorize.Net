@@ -2,9 +2,11 @@ using System;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using AuthorizeNet;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.OrdersModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model;
@@ -18,10 +20,14 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 {
     public class AuthorizeNetMethod : PaymentMethod
     {
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly AuthorizeNetSecureOptions _options;
 
-        public AuthorizeNetMethod(IOptions<AuthorizeNetSecureOptions> options) : base(nameof(AuthorizeNetMethod))
+        public AuthorizeNetMethod(
+            IOptions<AuthorizeNetSecureOptions> options,
+            IHttpClientFactory httpClientFactory) : base(nameof(AuthorizeNetMethod))
         {
+            _httpClientFactory = httpClientFactory;
             _options = options?.Value ?? new AuthorizeNetSecureOptions();
         }
 
@@ -106,53 +112,57 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             var result = AbstractTypeFactory<CapturePaymentRequestResult>.TryCreateInstance();
             var payment = context.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(context.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
 
-            using (var webClient = new WebClient())
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var form = new NameValueCollection
             {
-                var form = new NameValueCollection();
-                form.Add("x_login", ApiLogin);
-                form.Add("x_tran_key", TxnKey);
+                { "x_login", ApiLogin },
+                { "x_tran_key", TxnKey },
+                { "x_delim_data", "TRUE" },
+                { "x_delim_char", "|" },
+                { "x_encap_char", "" },
+                { "x_version", ApiVersion },
+                { "x_method", "CC" },
+                { "x_currency_code", payment.Currency.ToString() },
+                { "x_type", "CAPTURE_ONLY" }
+            };
 
-                form.Add("x_delim_data", "TRUE");
-                form.Add("x_delim_char", "|");
-                form.Add("x_encap_char", "");
-                form.Add("x_version", ApiVersion);
-                form.Add("x_method", "CC");
-                form.Add("x_currency_code", payment.Currency.ToString());
-                form.Add("x_type", "CAPTURE_ONLY");
+            var orderTotal = Math.Round(payment.Sum, 2);
+            form.Add("x_amount", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
 
-                var orderTotal = Math.Round(payment.Sum, 2);
-                form.Add("x_amount", orderTotal.ToString("0.00", CultureInfo.InvariantCulture));
+            //x_trans_id. When x_test_request (sandbox) is set to a positive response, 
+            //or when Test mode is enabled on the payment gateway, this value will be "0".
+            form.Add("x_trans_id", payment.OuterId);
 
-                //x_trans_id. When x_test_request (sandbox) is set to a positive response, 
-                //or when Test mode is enabled on the payment gateway, this value will be "0".
-                form.Add("x_trans_id", payment.OuterId);
+            var httpContent = new MultipartFormDataContent();
+            httpContent.Add(new StringContent(JsonSerializer.Serialize(form)));
 
-                var responseData = webClient.UploadValues(GetAuthorizeNetUrl(), form);
-                var reply = Encoding.ASCII.GetString(responseData);
+            var responseData = httpClient.PostAsync(GetAuthorizeNetUrl(), httpContent).GetAwaiter().GetResult();
+            var reply = responseData.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
-                if (!string.IsNullOrEmpty(reply))
+            if (!string.IsNullOrEmpty(reply))
+            {
+                var responseFields = reply.Split('|');
+                switch (responseFields[0])
                 {
-                    string[] responseFields = reply.Split('|');
-                    switch (responseFields[0])
-                    {
-                        case "1":
-                            result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Paid;
-                            payment.CapturedDate = DateTime.UtcNow;
-                            result.OuterId = payment.OuterId = $"{responseFields[6]},{responseFields[4]}";
-                            result.IsSuccess = true;
-                            payment.IsApproved = true;
-                            break;
-                        case "2":
-                            throw new InvalidOperationException($"{PaymentStatus.Declined} ({responseFields[2]}: {responseFields[3]})");
-                        case "3":
-                            throw new InvalidOperationException($"{PaymentStatus.Error}: {reply}");
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException("Authorize.NET (Credit card) unknown error");
+                    case "1":
+                        result.NewPaymentStatus = payment.PaymentStatus = PaymentStatus.Paid;
+                        payment.CapturedDate = DateTime.UtcNow;
+                        result.OuterId = payment.OuterId = $"{responseFields[6]},{responseFields[4]}";
+                        result.IsSuccess = true;
+                        payment.IsApproved = true;
+                        break;
+                    case "2":
+                        throw new InvalidOperationException($"{PaymentStatus.Declined} ({responseFields[2]}: {responseFields[3]})");
+                    case "3":
+                        throw new InvalidOperationException($"{PaymentStatus.Error}: {reply}");
                 }
             }
+            else
+            {
+                throw new InvalidOperationException("Authorize.NET (Credit card) unknown error");
+            }
+
 
             return result;
         }
@@ -163,10 +173,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
             var order = request.Order as CustomerOrder ?? throw new InvalidOperationException($"\"{nameof(request.Order)}\" should not be null and of \"{nameof(CustomerOrder)}\" type.");
-#pragma warning disable S1481 // Unused local variables should be removed
-            // Need to check shop existence, though not using it
             var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
-#pragma warning restore S1481 // Unused local variables should be removed
 
             var transactionId = request.Parameters["x_split_tender_id"] ?? request.Parameters["x_trans_id"];
             var invoiceNumber = request.Parameters["x_invoice_num"];
@@ -253,10 +260,11 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
             var order = request.Order as CustomerOrder ?? throw new InvalidOperationException($"\"{nameof(request.Order)}\" should not be null and of \"{nameof(CustomerOrder)}\" type.");
-#pragma warning disable S1481 // Unused local variables should be removed
-            // Need to check shop existence, though not using it
-            var store = request.Store as Store ?? throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
-#pragma warning restore S1481 // Unused local variables should be removed
+
+            if (request.Store as Store is null)
+            {
+                throw new InvalidOperationException($"\"{nameof(request.Store)}\" should not be null and of \"{nameof(Store)}\" type.");
+            }
 
             if (payment.PaymentStatus == PaymentStatus.Paid)
             {
@@ -274,10 +282,10 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             }
 
             var sequence = new Random().Next(0, 1000).ToString();
-            var timeStamp = ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString();
+            var timeStamp = ((int)(DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds).ToString();
             var currency = payment.Currency.ToString();
 
-            var fingerprint = HmacMD5(TxnKey, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
+            var fingerprint = HMACSHA512(SHA5Hash, ApiLogin + "^" + sequence + "^" + timeStamp + "^" + payment.Sum.ToString("F", CultureInfo.InvariantCulture) + "^" + currency);
 
             var confirmationUrl = string.Format("{0}/{1}", ConfirmationUrl, request.Order.Id);
 
@@ -381,7 +389,6 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         public override VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
         {
-            /*
             var result = AbstractTypeFactory<VoidPaymentRequestResult>.TryCreateInstance();
 
             var payment = request.Payment as PaymentIn ?? throw new InvalidOperationException($"\"{nameof(request.Payment)}\" should not be null and of \"{nameof(PaymentIn)}\" type.");
@@ -390,7 +397,6 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             {
                 var voidRequest = new VoidRequest(payment.OuterId);
                 var gate = new Gateway(ApiLogin, TxnKey, true);
-
                 var response = gate.Send(voidRequest);
 
                 if (response.Approved)
@@ -410,9 +416,8 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
             {
                 throw new InvalidOperationException("Only authorized payments can be voided");
             }
+
             return result;
-            */
-            return null;
         }
 
         private string GetAuthOrCapture()
@@ -425,7 +430,7 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 throw new InvalidOperationException($@"PaymentActionType {PaymentActionType} is not available");
         }
 
-        private string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
+        private static string CreateInput(bool isHidden, string inputName, string inputValue, int maxLength = 0, string supplementaryFields = null)
         {
             string retVal;
             if (isHidden)
@@ -442,27 +447,6 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
 
         private const string ApiVersion = "3.1";
 
-        private string HmacMD5(string key, string value)
-        {
-            var encKey = (new ASCIIEncoding()).GetBytes(key);
-            var encData = (new ASCIIEncoding()).GetBytes(value);
-
-            // create a HMACMD5 object with the key set
-            var myhmacMD5 = new HMACMD5(encKey);
-
-            // calculate the hash (returns a byte array)
-            var hash = myhmacMD5.ComputeHash(encData);
-
-            // loop through the byte array and add append each piece to a string to obtain a hash string
-            var fingerprint = new StringBuilder();
-            for (int i = 0; i < hash.Length; i++)
-            {
-                fingerprint.Append(hash[i].ToString("x").PadLeft(2, '0'));
-            }
-
-            return fingerprint.ToString();
-        }
-
         private string GetDataString(NameValueCollection queryString)
         {
             // Fields from the Response (p73) https://www.authorize.net/content/dam/anet-redesign/documents/SIM_guide.pdf
@@ -474,33 +458,40 @@ namespace VirtoCommerce.AuthorizeNet.Web.Managers
                 dataString.Append($"^{queryString[parameter]}");
             }
 
-            dataString.Append("^");
+            dataString.Append('^');
             return dataString.ToString();
         }
 
-        private string HMACSHA512(string key, string textToHash)
+        private static string HMACSHA512(string key, string textToHash)
         {
             if (string.IsNullOrEmpty(key))
-                throw new ArgumentNullException("key", "HMACSHA512: Parameter key cannot be empty.");
+            {
+                throw new ArgumentNullException(nameof(key), "HMACSHA512: Parameter key cannot be empty.");
+            }
+
             if (string.IsNullOrEmpty(textToHash))
-                throw new ArgumentNullException("textToHash", "HMACSHA512: Parameter textToHash cannot be empty.");
+            {
+                throw new ArgumentNullException(nameof(textToHash), "HMACSHA512: Parameter textToHash cannot be empty.");
+            }
+
             if (key.Length % 2 != 0 || key.Trim().Length < 2)
             {
-                throw new ArgumentException("HMACSHA512: Parameter key cannot be odd or less than 2 characters.", "key");
+                throw new ArgumentException("HMACSHA512: Parameter key cannot be odd or less than 2 characters.", nameof(key));
             }
+
             try
             {
-                byte[] k = Enumerable.Range(0, key.Length)
+                var k = Enumerable.Range(0, key.Length)
                     .Where(x => x % 2 == 0)
                     .Select(x => Convert.ToByte(key.Substring(x, 2), 16))
                     .ToArray();
-                HMACSHA512 hmac = new HMACSHA512(k);
-                byte[] HashedValue = hmac.ComputeHash((new System.Text.ASCIIEncoding()).GetBytes(textToHash));
-                return BitConverter.ToString(HashedValue).Replace("-", string.Empty);
+                var hmac = new HMACSHA512(k);
+                var hashedValue = hmac.ComputeHash(new ASCIIEncoding().GetBytes(textToHash));
+                return BitConverter.ToString(hashedValue).Replace("-", string.Empty);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new ArgumentException("HMACSHA512: " + ex.Message);
+                throw;
             }
         }
 
