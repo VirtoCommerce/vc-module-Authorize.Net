@@ -1,9 +1,5 @@
-namespace AuthorizeNet 
+namespace AuthorizeNet
 {
-    using System;
-    using System.Configuration;
-    using System.Linq;
-
     /*================================================================================
     * 
     * Determines the target environment to post transactions.
@@ -16,45 +12,50 @@ namespace AuthorizeNet
     *
     *===============================================================================*/
 
-    public class Environment {
+    public class Environment
+    {
         public static readonly Environment SANDBOX = new Environment("https://test.authorize.net", "https://apitest.authorize.net", "https://test.authorize.net");
-        public static readonly Environment PRODUCTION = new Environment("https://secure2.authorize.net","https://api2.authorize.net","https://cardpresent.authorize.net");
-	    public static readonly Environment LOCAL_VM = new Environment(null, null, null);
-	    public static readonly Environment HOSTED_VM = new Environment(null, null, null);
+        public static readonly Environment PRODUCTION = new Environment("https://secure2.authorize.net", "https://api2.authorize.net", "https://cardpresent.authorize.net");
+        public static readonly Environment LOCAL_VM = new Environment(null, null, null);
+        public static readonly Environment HOSTED_VM = new Environment(null, null, null);
         public static Environment CUSTOM = new Environment(null, null, null);
 
-	    private String _baseUrl;
-	    private String _xmlBaseUrl;
-	    private String _cardPresentUrl;
+        private string _baseUrl;
+        private string _xmlBaseUrl;
+        private string _cardPresentUrl;
 
-	    private Environment(String baseUrl, String xmlBaseUrl, String cardPresentUrl) {
-		    _baseUrl = baseUrl;
-		    _xmlBaseUrl = xmlBaseUrl;
-		    _cardPresentUrl = cardPresentUrl;
-	    }
+        private Environment(string baseUrl, string xmlBaseUrl, string cardPresentUrl)
+        {
+            _baseUrl = baseUrl;
+            _xmlBaseUrl = xmlBaseUrl;
+            _cardPresentUrl = cardPresentUrl;
+        }
 
-	    /**
+        /**
 	     * @return the baseUrl
 	     */
-	    public String getBaseUrl() {
-		    return _baseUrl;
-	    }
+        public string getBaseUrl()
+        {
+            return _baseUrl;
+        }
 
-	    /**
+        /**
 	     * @return the xmlBaseUrl
 	     */
-	    public String getXmlBaseUrl() {
-		    return _xmlBaseUrl;
-	    }
+        public string getXmlBaseUrl()
+        {
+            return _xmlBaseUrl;
+        }
 
-	    /**
+        /**
 	     * @return the cardPresentUrl
 	     */
-	    public String getCardPresentUrl() {
-		    return _cardPresentUrl;
-	    }
+        public string getCardPresentUrl()
+        {
+            return _cardPresentUrl;
+        }
 
-	    /**
+        /**
 	     * If a custom environment needs to be supported, this convenience create
 	     * method can be used to pass in a custom baseUrl.
 	     *
@@ -62,12 +63,12 @@ namespace AuthorizeNet
 	     * @param xmlBaseUrl
 	     * @return Environment object
 	     */
-	    public static Environment createEnvironment(String baseUrl, String xmlBaseUrl) {
+        public static Environment createEnvironment(string baseUrl, string xmlBaseUrl)
+        {
+            return createEnvironment(baseUrl, xmlBaseUrl, null);
+        }
 
-		    return createEnvironment( baseUrl, xmlBaseUrl, null);
-	    }
-
-	    /**
+        /**
 	     * If a custom environment needs to be supported, this convenience create
 	     * method can be used to pass in a custom baseUrl.
 	     *
@@ -77,68 +78,63 @@ namespace AuthorizeNet
 	     *
 	     * @return Environment object
 	     */
-	    public static Environment createEnvironment(String baseUrl, String xmlBaseUrl, String cardPresentUrl) {
-		    var environment = Environment.CUSTOM;
-		    environment._baseUrl = baseUrl;
-		    environment._xmlBaseUrl = xmlBaseUrl;
-		    environment._cardPresentUrl = cardPresentUrl;
+        public static Environment createEnvironment(string baseUrl, string xmlBaseUrl, string cardPresentUrl)
+        {
+            var environment = CUSTOM;
+            environment._baseUrl = baseUrl;
+            environment._xmlBaseUrl = xmlBaseUrl;
+            environment._cardPresentUrl = cardPresentUrl;
 
-		    return environment;
-	    }
-	
-	    /**
+            return environment;
+        }
+
+        /**
 	     * Reads a integer value from property file and/or the environment
 	     * Values in property file supersede the values set in environment
 	     * @param propertyName name of the integer property to read
 	     * @return int property value
 	     */
-	    public static int getIntProperty( String propertyName) 
-	    {
-	        var stringValue = GetProperty(propertyName);
-            var value = (AuthorizeNet.Util.StringUtils.ParseInt(stringValue));
-		
-		    return value;
-	    }
+        public static int getIntProperty(string propertyName)
+        {
+            var stringValue = GetProperty(propertyName);
+            var value = Util.StringUtils.ParseInt(stringValue);
 
-	    /**
+            return value;
+        }
+
+        /**
 	     * Reads a boolean value from property file and/or the environment
 	     * Values in property file supersede the values set in environment
 	     * @param propertyName name of the boolean property to read
 	     * @return boolean property value
 	     */
-	    public static bool getBooleanProperty( String propertyName) 
-	    {
-		    var value = false;
-		    var stringValue = GetProperty(propertyName);
-		    if ( null != stringValue)
-		    {
-			    Boolean.TryParse(stringValue.Trim(), out value); 
-		    }
-		
-		    return value;
-	    }
+        public static bool getBooleanProperty(string propertyName)
+        {
+            var stringValue = GetProperty(propertyName);
+            if (!string.IsNullOrEmpty(stringValue) && bool.TryParse(stringValue.Trim(), out var value))
+            {
+                return value;
+            }
 
-	    /// <summary>
-	    /// Reads the value from property file and/or the environment 
-	    /// Values in property file supersede the values set in environment
-	    /// </summary>
+            return false;
+        }
+
+        /// <summary>
+        /// Reads the value from property file and/or the environment 
+        /// Values in property file supersede the values set in environment
+        /// </summary>
         /// <param name="propertyName">propertyName name of the property to read</param>
         /// <returns>String property value</returns>
-	    public static String GetProperty(String propertyName) {
-		    String stringValue = null;
-
-	        String propValue = null;
+        public static string GetProperty(string propertyName)
+        {
+            string stringValue = null;
 
             var envValue = System.Environment.GetEnvironmentVariable(propertyName);
-		    if ( null != propValue && propValue.Trim().Length > 0 )
-		    {
-			    stringValue = propValue;
-		    }
-		    else if ( null != envValue && envValue.Trim().Length > 0 )
-		    {
-			    stringValue = envValue;
-		    }
-		    return stringValue;
-	    }
+            if (!string.IsNullOrEmpty(envValue) && envValue.Trim().Length > 0)
+            {
+                stringValue = envValue;
+            }
+            return stringValue;
+        }
     }
 }
