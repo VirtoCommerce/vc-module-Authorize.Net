@@ -1,9 +1,5 @@
 namespace AuthorizeNet 
 {
-    using System;
-    using System.Configuration;
-    using System.Linq;
-
     /*================================================================================
     * 
     * Determines the target environment to post transactions.
@@ -23,11 +19,11 @@ namespace AuthorizeNet
 	    public static readonly Environment HOSTED_VM = new Environment(null, null, null);
         public static Environment CUSTOM = new Environment(null, null, null);
 
-	    private String _baseUrl;
-	    private String _xmlBaseUrl;
-	    private String _cardPresentUrl;
+	    private string _baseUrl;
+	    private string _xmlBaseUrl;
+	    private string _cardPresentUrl;
 
-	    private Environment(String baseUrl, String xmlBaseUrl, String cardPresentUrl) {
+	    private Environment(string baseUrl, string xmlBaseUrl, string cardPresentUrl) {
 		    _baseUrl = baseUrl;
 		    _xmlBaseUrl = xmlBaseUrl;
 		    _cardPresentUrl = cardPresentUrl;
@@ -36,21 +32,21 @@ namespace AuthorizeNet
 	    /**
 	     * @return the baseUrl
 	     */
-	    public String getBaseUrl() {
+	    public string getBaseUrl() {
 		    return _baseUrl;
 	    }
 
 	    /**
 	     * @return the xmlBaseUrl
 	     */
-	    public String getXmlBaseUrl() {
+	    public string getXmlBaseUrl() {
 		    return _xmlBaseUrl;
 	    }
 
 	    /**
 	     * @return the cardPresentUrl
 	     */
-	    public String getCardPresentUrl() {
+	    public string getCardPresentUrl() {
 		    return _cardPresentUrl;
 	    }
 
@@ -62,7 +58,7 @@ namespace AuthorizeNet
 	     * @param xmlBaseUrl
 	     * @return Environment object
 	     */
-	    public static Environment createEnvironment(String baseUrl, String xmlBaseUrl) {
+	    public static Environment createEnvironment(string baseUrl, string xmlBaseUrl) {
 
 		    return createEnvironment( baseUrl, xmlBaseUrl, null);
 	    }
@@ -77,7 +73,7 @@ namespace AuthorizeNet
 	     *
 	     * @return Environment object
 	     */
-	    public static Environment createEnvironment(String baseUrl, String xmlBaseUrl, String cardPresentUrl) {
+	    public static Environment createEnvironment(string baseUrl, string xmlBaseUrl, string cardPresentUrl) {
 		    var environment = Environment.CUSTOM;
 		    environment._baseUrl = baseUrl;
 		    environment._xmlBaseUrl = xmlBaseUrl;
@@ -92,7 +88,7 @@ namespace AuthorizeNet
 	     * @param propertyName name of the integer property to read
 	     * @return int property value
 	     */
-	    public static int getIntProperty( String propertyName) 
+	    public static int getIntProperty( string propertyName) 
 	    {
 	        var stringValue = GetProperty(propertyName);
             var value = (AuthorizeNet.Util.StringUtils.ParseInt(stringValue));
@@ -106,13 +102,13 @@ namespace AuthorizeNet
 	     * @param propertyName name of the boolean property to read
 	     * @return boolean property value
 	     */
-	    public static bool getBooleanProperty( String propertyName) 
+	    public static bool getBooleanProperty( string propertyName) 
 	    {
 		    var value = false;
 		    var stringValue = GetProperty(propertyName);
 		    if ( null != stringValue)
 		    {
-			    Boolean.TryParse(stringValue.Trim(), out value); 
+			    bool.TryParse(stringValue.Trim(), out value); 
 		    }
 		
 		    return value;
@@ -124,20 +120,14 @@ namespace AuthorizeNet
 	    /// </summary>
         /// <param name="propertyName">propertyName name of the property to read</param>
         /// <returns>String property value</returns>
-	    public static String GetProperty(String propertyName) {
-		    String stringValue = null;
-
-	        String propValue = null;
+	    public static string GetProperty(string propertyName) {
+		    string stringValue = null;
 
             var envValue = System.Environment.GetEnvironmentVariable(propertyName);
-		    if ( null != propValue && propValue.Trim().Length > 0 )
-		    {
-			    stringValue = propValue;
-		    }
-		    else if ( null != envValue && envValue.Trim().Length > 0 )
-		    {
-			    stringValue = envValue;
-		    }
+		    if ( null != envValue && envValue.Trim().Length > 0 )
+            {
+                stringValue = envValue;
+            }
 		    return stringValue;
 	    }
     }
