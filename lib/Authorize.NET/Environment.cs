@@ -104,14 +104,13 @@ namespace AuthorizeNet
 	     */
 	    public static bool getBooleanProperty( string propertyName) 
 	    {
-		    var value = false;
-		    var stringValue = GetProperty(propertyName);
-		    if ( null != stringValue)
-		    {
-			    bool.TryParse(stringValue.Trim(), out value); 
-		    }
-		
-		    return value;
+            var stringValue = GetProperty(propertyName);
+		    if ( null != stringValue && bool.TryParse(stringValue.Trim(), out var value))
+            {
+                return value;
+            }
+
+            return false;
 	    }
 
 	    /// <summary>
