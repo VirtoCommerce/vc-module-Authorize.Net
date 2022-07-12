@@ -1,3 +1,10 @@
+## Deprecation warning ⚠️
+This Authorize.Net DPM payment gateway is no longer being maintained by Virto Commerce. Developers are encouraged to check out [New Authorize.Net module](https://github.com/VirtoCommerce/vc-module-authorize-net) .
+
+You can continue to use the module with Virto Commerce Platform 3.x and Storefront 5.x; however, this repo will not be kept up-to-date.
+
+---
+
 # Authorize.Net DPM payment gateway integration module
 
 [![CI status](https://github.com/VirtoCommerce/vc-module-Authorize.Net/workflows/Module%20CI/badge.svg?branch=dev)](https://github.com/VirtoCommerce/vc-module-Authorize.Net/actions?query=workflow%3A"Module+CI") [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=alert_status&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net) [![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=reliability_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net) [![Security rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=security_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net) [![Sqale rating](https://sonarcloud.io/api/project_badges/measure?project=VirtoCommerce_vc-module-Authorize.Net&metric=sqale_rating&branch=dev)](https://sonarcloud.io/dashboard?id=VirtoCommerce_vc-module-Authorize.Net)
